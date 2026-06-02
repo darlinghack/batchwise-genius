@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/dashboard/batches")({
+export const Route = createFileRoute("/dashboard/batches/")({
   head: () => ({ meta: [{ title: "Batches — Datapro QuizHub" }] }),
   component: BatchesPage,
 });
