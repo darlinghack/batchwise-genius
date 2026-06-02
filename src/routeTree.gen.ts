@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
 import { Route as DashboardBatchesRouteImport } from './routes/dashboard.batches'
 import { Route as DashboardBatchesBatchIdRouteImport } from './routes/dashboard.batches.$batchId'
 
@@ -54,6 +55,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardQuizzesRoute = DashboardQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardBatchesRoute = DashboardBatchesRouteImport.update({
   id: '/batches',
   path: '/batches',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
+  '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
+  '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
+  '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
 }
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard/batches'
+    | '/dashboard/quizzes'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard/batches'
+    | '/dashboard/quizzes'
     | '/dashboard'
     | '/dashboard/batches/$batchId'
   id:
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/dashboard/batches'
+    | '/dashboard/quizzes'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
   fileRoutesById: FileRoutesById
@@ -193,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/quizzes': {
+      id: '/dashboard/quizzes'
+      path: '/quizzes'
+      fullPath: '/dashboard/quizzes'
+      preLoaderRoute: typeof DashboardQuizzesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/batches': {
       id: '/dashboard/batches'
       path: '/batches'
@@ -223,11 +242,13 @@ const DashboardBatchesRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardBatchesRoute: typeof DashboardBatchesRouteWithChildren
+  DashboardQuizzesRoute: typeof DashboardQuizzesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardBatchesRoute: DashboardBatchesRouteWithChildren,
+  DashboardQuizzesRoute: DashboardQuizzesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
