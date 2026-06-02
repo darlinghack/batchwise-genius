@@ -17,6 +17,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardBatchesRouteImport } from './routes/dashboard.batches'
+import { Route as DashboardBatchesBatchIdRouteImport } from './routes/dashboard.batches.$batchId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -58,6 +59,11 @@ const DashboardBatchesRoute = DashboardBatchesRouteImport.update({
   path: '/batches',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBatchesBatchIdRoute = DashboardBatchesBatchIdRouteImport.update({
+  id: '/$batchId',
+  path: '/$batchId',
+  getParentRoute: () => DashboardBatchesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,8 +72,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/dashboard/batches': typeof DashboardBatchesRoute
+  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,8 +82,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/dashboard/batches': typeof DashboardBatchesRoute
+  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,8 +94,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/dashboard/batches': typeof DashboardBatchesRoute
+  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard/batches'
     | '/dashboard/'
+    | '/dashboard/batches/$batchId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard/batches'
     | '/dashboard'
+    | '/dashboard/batches/$batchId'
   id:
     | '__root__'
     | '/'
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/dashboard/batches'
     | '/dashboard/'
+    | '/dashboard/batches/$batchId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -188,16 +200,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBatchesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/batches/$batchId': {
+      id: '/dashboard/batches/$batchId'
+      path: '/$batchId'
+      fullPath: '/dashboard/batches/$batchId'
+      preLoaderRoute: typeof DashboardBatchesBatchIdRouteImport
+      parentRoute: typeof DashboardBatchesRoute
+    }
   }
 }
 
+interface DashboardBatchesRouteChildren {
+  DashboardBatchesBatchIdRoute: typeof DashboardBatchesBatchIdRoute
+}
+
+const DashboardBatchesRouteChildren: DashboardBatchesRouteChildren = {
+  DashboardBatchesBatchIdRoute: DashboardBatchesBatchIdRoute,
+}
+
+const DashboardBatchesRouteWithChildren =
+  DashboardBatchesRoute._addFileChildren(DashboardBatchesRouteChildren)
+
 interface DashboardRouteChildren {
-  DashboardBatchesRoute: typeof DashboardBatchesRoute
+  DashboardBatchesRoute: typeof DashboardBatchesRouteWithChildren
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardBatchesRoute: DashboardBatchesRoute,
+  DashboardBatchesRoute: DashboardBatchesRouteWithChildren,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
