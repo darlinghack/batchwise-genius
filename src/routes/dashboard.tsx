@@ -21,13 +21,13 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
 });
 
-const nav = [
+const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/batches", label: "Batches", icon: Layers },
   { to: "/dashboard/quizzes", label: "Quizzes", icon: FileQuestion },
   { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/dashboard/profile", label: "Profile", icon: User },
-] as const;
+];
 
 function DashboardLayout() {
   const { user, loading, signOut, role } = useAuth();
