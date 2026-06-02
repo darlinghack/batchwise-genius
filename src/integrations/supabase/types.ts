@@ -14,16 +14,311 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      batches: {
+        Row: {
+          course_name: string
+          created_at: string
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["batch_status"]
+          trainer_id: string
+          trainer_name: string
+          updated_at: string
+        }
+        Insert: {
+          course_name: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["batch_status"]
+          trainer_id: string
+          trainer_name?: string
+          updated_at?: string
+        }
+        Update: {
+          course_name?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["batch_status"]
+          trainer_id?: string
+          trainer_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          difficulty: Database["public"]["Enums"]["quiz_difficulty"]
+          explanation: string
+          id: string
+          options: Json
+          position: number
+          question_text: string
+          quiz_id: string
+        }
+        Insert: {
+          correct_index?: number
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
+          explanation?: string
+          id?: string
+          options?: Json
+          position?: number
+          question_text: string
+          quiz_id: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
+          explanation?: string
+          id?: string
+          options?: Json
+          position?: number
+          question_text?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          difficulty: Database["public"]["Enums"]["quiz_difficulty"]
+          duration_minutes: number
+          id: string
+          num_questions: number
+          share_code: string
+          status: Database["public"]["Enums"]["quiz_status"]
+          title: string
+          topic_id: string | null
+          topic_name: string
+          trainer_id: string
+          type: Database["public"]["Enums"]["quiz_type"]
+          updated_at: string
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
+          duration_minutes?: number
+          id?: string
+          num_questions?: number
+          share_code?: string
+          status?: Database["public"]["Enums"]["quiz_status"]
+          title: string
+          topic_id?: string | null
+          topic_name?: string
+          trainer_id: string
+          type?: Database["public"]["Enums"]["quiz_type"]
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
+          duration_minutes?: number
+          id?: string
+          num_questions?: number
+          share_code?: string
+          status?: Database["public"]["Enums"]["quiz_status"]
+          title?: string
+          topic_id?: string | null
+          topic_name?: string
+          trainer_id?: string
+          type?: Database["public"]["Enums"]["quiz_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quizzes_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          answers: Json
+          college_name: string
+          id: string
+          percentage: number
+          points: number
+          quiz_id: string
+          roll_number: string
+          score: number
+          student_email: string
+          student_name: string
+          submitted_at: string
+          time_taken_seconds: number
+          total: number
+        }
+        Insert: {
+          answers?: Json
+          college_name?: string
+          id?: string
+          percentage?: number
+          points?: number
+          quiz_id: string
+          roll_number?: string
+          score?: number
+          student_email: string
+          student_name: string
+          submitted_at?: string
+          time_taken_seconds?: number
+          total?: number
+        }
+        Update: {
+          answers?: Json
+          college_name?: string
+          id?: string
+          percentage?: number
+          points?: number
+          quiz_id?: string
+          roll_number?: string
+          score?: number
+          student_email?: string
+          student_name?: string
+          submitted_at?: string
+          time_taken_seconds?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          batch_id: string
+          created_at: string
+          day_number: number
+          id: string
+          status: Database["public"]["Enums"]["topic_status"]
+          title: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          day_number?: number
+          id?: string
+          status?: Database["public"]["Enums"]["topic_status"]
+          title: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          day_number?: number
+          id?: string
+          status?: Database["public"]["Enums"]["topic_status"]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "trainer"
+      batch_status: "upcoming" | "active" | "completed"
+      quiz_difficulty: "easy" | "medium" | "hard"
+      quiz_status: "draft" | "published" | "closed"
+      quiz_type: "daily" | "weekend"
+      topic_status: "planned" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +445,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "trainer"],
+      batch_status: ["upcoming", "active", "completed"],
+      quiz_difficulty: ["easy", "medium", "hard"],
+      quiz_status: ["draft", "published", "closed"],
+      quiz_type: ["daily", "weekend"],
+      topic_status: ["planned", "completed"],
+    },
   },
 } as const
