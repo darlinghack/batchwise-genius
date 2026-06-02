@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as QuizShareCodeRouteImport } from './routes/quiz.$shareCode'
 import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardBatchesRouteImport } from './routes/dashboard.batches'
@@ -58,6 +59,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const QuizShareCodeRoute = QuizShareCodeRouteImport.update({
+  id: '/quiz/$shareCode',
+  path: '/quiz/$shareCode',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardQuizzesRoute = DashboardQuizzesRouteImport.update({
   id: '/quizzes',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
+  '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
+  '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
+  '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/dashboard/batches'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
+    | '/quiz/$shareCode'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/dashboard/batches'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
+    | '/quiz/$shareCode'
     | '/dashboard'
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/dashboard/batches'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
+    | '/quiz/$shareCode'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  QuizShareCodeRoute: typeof QuizShareCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/quiz/$shareCode': {
+      id: '/quiz/$shareCode'
+      path: '/quiz/$shareCode'
+      fullPath: '/quiz/$shareCode'
+      preLoaderRoute: typeof QuizShareCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/quizzes': {
       id: '/dashboard/quizzes'
@@ -356,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  QuizShareCodeRoute: QuizShareCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
