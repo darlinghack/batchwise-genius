@@ -9,38 +9,269 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as QuizShareCodeRouteImport } from './routes/quiz.$shareCode'
+import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
+import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardBatchesRouteImport } from './routes/dashboard.batches'
+import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
+import { Route as DashboardQuizQuizIdRouteImport } from './routes/dashboard.quiz.$quizId'
+import { Route as DashboardBatchesBatchIdRouteImport } from './routes/dashboard.batches.$batchId'
+import { Route as DashboardQuizQuizIdLiveRouteImport } from './routes/dashboard.quiz.$quizId.live'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const QuizShareCodeRoute = QuizShareCodeRouteImport.update({
+  id: '/quiz/$shareCode',
+  path: '/quiz/$shareCode',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardQuizzesRoute = DashboardQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardProfileRoute = DashboardProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBatchesRoute = DashboardBatchesRouteImport.update({
+  id: '/batches',
+  path: '/batches',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardQuizQuizIdRoute = DashboardQuizQuizIdRouteImport.update({
+  id: '/quiz/$quizId',
+  path: '/quiz/$quizId',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBatchesBatchIdRoute = DashboardBatchesBatchIdRouteImport.update({
+  id: '/$batchId',
+  path: '/$batchId',
+  getParentRoute: () => DashboardBatchesRoute,
+} as any)
+const DashboardQuizQuizIdLiveRoute = DashboardQuizQuizIdLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => DashboardQuizQuizIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/quizzes': typeof DashboardQuizzesRoute
+  '/quiz/$shareCode': typeof QuizShareCodeRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
+  '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
+  '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/quizzes': typeof DashboardQuizzesRoute
+  '/quiz/$shareCode': typeof QuizShareCodeRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
+  '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
+  '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
+  '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/quizzes': typeof DashboardQuizzesRoute
+  '/quiz/$shareCode': typeof QuizShareCodeRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
+  '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
+  '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/sitemap.xml'
+    | '/dashboard/analytics'
+    | '/dashboard/batches'
+    | '/dashboard/profile'
+    | '/dashboard/quizzes'
+    | '/quiz/$shareCode'
+    | '/dashboard/'
+    | '/dashboard/batches/$batchId'
+    | '/dashboard/quiz/$quizId'
+    | '/dashboard/quiz/$quizId/live'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/sitemap.xml'
+    | '/dashboard/analytics'
+    | '/dashboard/batches'
+    | '/dashboard/profile'
+    | '/dashboard/quizzes'
+    | '/quiz/$shareCode'
+    | '/dashboard'
+    | '/dashboard/batches/$batchId'
+    | '/dashboard/quiz/$quizId'
+    | '/dashboard/quiz/$quizId/live'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/reset-password'
+    | '/sitemap.xml'
+    | '/dashboard/analytics'
+    | '/dashboard/batches'
+    | '/dashboard/profile'
+    | '/dashboard/quizzes'
+    | '/quiz/$shareCode'
+    | '/dashboard/'
+    | '/dashboard/batches/$batchId'
+    | '/dashboard/quiz/$quizId'
+    | '/dashboard/quiz/$quizId/live'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  QuizShareCodeRoute: typeof QuizShareCodeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +279,126 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/quiz/$shareCode': {
+      id: '/quiz/$shareCode'
+      path: '/quiz/$shareCode'
+      fullPath: '/quiz/$shareCode'
+      preLoaderRoute: typeof QuizShareCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/quizzes': {
+      id: '/dashboard/quizzes'
+      path: '/quizzes'
+      fullPath: '/dashboard/quizzes'
+      preLoaderRoute: typeof DashboardQuizzesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/profile': {
+      id: '/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/batches': {
+      id: '/dashboard/batches'
+      path: '/batches'
+      fullPath: '/dashboard/batches'
+      preLoaderRoute: typeof DashboardBatchesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/analytics': {
+      id: '/dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/analytics'
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/quiz/$quizId': {
+      id: '/dashboard/quiz/$quizId'
+      path: '/quiz/$quizId'
+      fullPath: '/dashboard/quiz/$quizId'
+      preLoaderRoute: typeof DashboardQuizQuizIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/batches/$batchId': {
+      id: '/dashboard/batches/$batchId'
+      path: '/$batchId'
+      fullPath: '/dashboard/batches/$batchId'
+      preLoaderRoute: typeof DashboardBatchesBatchIdRouteImport
+      parentRoute: typeof DashboardBatchesRoute
+    }
+    '/dashboard/quiz/$quizId/live': {
+      id: '/dashboard/quiz/$quizId/live'
+      path: '/live'
+      fullPath: '/dashboard/quiz/$quizId/live'
+      preLoaderRoute: typeof DashboardQuizQuizIdLiveRouteImport
+      parentRoute: typeof DashboardQuizQuizIdRoute
+    }
   }
 }
 
+interface DashboardBatchesRouteChildren {
+  DashboardBatchesBatchIdRoute: typeof DashboardBatchesBatchIdRoute
+}
+
+const DashboardBatchesRouteChildren: DashboardBatchesRouteChildren = {
+  DashboardBatchesBatchIdRoute: DashboardBatchesBatchIdRoute,
+}
+
+const DashboardBatchesRouteWithChildren =
+  DashboardBatchesRoute._addFileChildren(DashboardBatchesRouteChildren)
+
+interface DashboardQuizQuizIdRouteChildren {
+  DashboardQuizQuizIdLiveRoute: typeof DashboardQuizQuizIdLiveRoute
+}
+
+const DashboardQuizQuizIdRouteChildren: DashboardQuizQuizIdRouteChildren = {
+  DashboardQuizQuizIdLiveRoute: DashboardQuizQuizIdLiveRoute,
+}
+
+const DashboardQuizQuizIdRouteWithChildren =
+  DashboardQuizQuizIdRoute._addFileChildren(DashboardQuizQuizIdRouteChildren)
+
+interface DashboardRouteChildren {
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
+  DashboardBatchesRoute: typeof DashboardBatchesRouteWithChildren
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardQuizzesRoute: typeof DashboardQuizzesRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardQuizQuizIdRoute: typeof DashboardQuizQuizIdRouteWithChildren
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
+  DashboardBatchesRoute: DashboardBatchesRouteWithChildren,
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardQuizzesRoute: DashboardQuizzesRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardQuizQuizIdRoute: DashboardQuizQuizIdRouteWithChildren,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  QuizShareCodeRoute: QuizShareCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

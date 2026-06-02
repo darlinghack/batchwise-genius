@@ -1,0 +1,255 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+  Loader2,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Trophy,
+  CheckCircle2,
+  XCircle,
+  Sparkles,
+  GraduationCap,
+} from "lucide-react";
+import { getPublicQuiz, submitQuiz } from "@/lib/quiz.functions";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Logo } from "@/components/Logo";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/quiz/$shareCode")({
+  head: () => ({ meta: [{ title: "Attempt Quiz — Datapro QuizHub" }] }),
+  component: PublicQuiz,
+});
+
+type Result = Awaited<ReturnType<typeof submitQuiz>>;
+
+function PublicQuiz() {
+  const { shareCode } = Route.useParams();
+  const fetchQuiz = useServerFn(getPublicQuiz);
+  const submit = useServerFn(submitQuiz);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["public-quiz", shareCode],
+    queryFn: () => fetchQuiz({ data: { code: shareCode } }),
+  });
+
+  const [phase, setPhase] = useState<"info" | "quiz" | "result">("info");
+  const [info, setInfo] = useState({ fullName: "", email: "", rollNumber: "", collegeName: "" });
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<Result | null>(null);
+  const startRef = useRef<number>(0);
+
+  const quiz = data?.quiz;
+  const questions = data?.questions ?? [];
+
+  // restore autosave
+  useEffect(() => {
+    const saved = localStorage.getItem(`quiz-${shareCode}`);
+    if (saved) {
+      try { setAnswers(JSON.parse(saved)); } catch { /* ignore */ }
+    }
+  }, [shareCode]);
+
+  useEffect(() => {
+    localStorage.setItem(`quiz-${shareCode}`, JSON.stringify(answers));
+  }, [answers, shareCode]);
+
+  const doSubmit = useRef<() => void>(() => {});
+  useEffect(() => {
+    if (phase !== "quiz" || !quiz) return;
+    const timer = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(timer);
+          doSubmit.current();
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, quiz]);
+
+  function startQuiz(e: React.FormEvent) {
+    e.preventDefault();
+    if (!info.fullName.trim() || !info.email.trim()) return toast.error("Name and email are required.");
+    setSecondsLeft((quiz?.duration_minutes ?? 15) * 60);
+    startRef.current = Date.now();
+    setPhase("quiz");
+  }
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const payload = questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 }));
+      const res = await submit({
+        data: {
+          code: shareCode,
+          fullName: info.fullName.trim(),
+          email: info.email.trim(),
+          rollNumber: info.rollNumber.trim(),
+          collegeName: info.collegeName.trim(),
+          answers: payload,
+          timeTakenSeconds: Math.round((Date.now() - startRef.current) / 1000),
+        },
+      });
+      setResult(res);
+      localStorage.removeItem(`quiz-${shareCode}`);
+      setPhase("result");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Submission failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+  doSubmit.current = handleSubmit;
+
+  if (isLoading) {
+    return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
+  if (!quiz) {
+    const msg =
+      data?.reason === "closed" ? "This quiz has been closed by the trainer."
+      : data?.reason === "draft" ? "This quiz isn't published yet."
+      : "Quiz not found. Please check the link.";
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-subtle p-6">
+        <Card className="max-w-sm p-8 text-center">
+          <GraduationCap className="mx-auto h-10 w-10 text-primary" />
+          <p className="mt-4 font-medium">{msg}</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
+  const answeredCount = questions.filter((q) => answers[q.id] !== undefined).length;
+
+  return (
+    <div className="min-h-screen bg-gradient-subtle">
+      <header className="border-b border-border bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
+          <Logo />
+          {phase === "quiz" && (
+            <div className={cn("flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold", secondsLeft < 60 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+              <Clock className="h-4 w-4" /> {mins}:{String(secs).padStart(2, "0")}
+            </div>
+          )}
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-3xl px-4 py-8">
+        {phase === "info" && (
+          <Card className="p-6 sm:p-8 animate-fade-in-up">
+            <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
+            <p className="mt-1 text-sm capitalize text-muted-foreground">{quiz.type} · {quiz.difficulty} · {questions.length} questions · {quiz.duration_minutes} min</p>
+            <form onSubmit={startQuiz} className="mt-6 space-y-4">
+              <div className="space-y-2"><Label>Full name *</Label><Input value={info.fullName} onChange={(e) => setInfo({ ...info, fullName: e.target.value })} required /></div>
+              <div className="space-y-2"><Label>Email *</Label><Input type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} required /></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Roll number</Label><Input value={info.rollNumber} onChange={(e) => setInfo({ ...info, rollNumber: e.target.value })} /></div>
+                <div className="space-y-2"><Label>College name</Label><Input value={info.collegeName} onChange={(e) => setInfo({ ...info, collegeName: e.target.value })} /></div>
+              </div>
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">Start quiz</Button>
+            </form>
+          </Card>
+        )}
+
+        {phase === "quiz" && questions[current] && (
+          <div className="animate-fade-in-up">
+            <div className="mb-4">
+              <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
+                <span>Question {current + 1} of {questions.length}</span>
+                <span>{answeredCount} answered</span>
+              </div>
+              <Progress value={((current + 1) / questions.length) * 100} />
+            </div>
+            <Card className="p-6">
+              <p className="text-lg font-medium">{questions[current].question_text}</p>
+              <div className="mt-5 space-y-2.5">
+                {questions[current].options.map((opt, oi) => {
+                  const qid = questions[current].id;
+                  const selected = answers[qid] === oi;
+                  return (
+                    <button
+                      key={oi}
+                      onClick={() => setAnswers({ ...answers, [qid]: oi })}
+                      className={cn("flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all", selected ? "border-primary bg-primary/5 shadow-elegant" : "border-border hover:border-primary/40")}
+                    >
+                      <span className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-medium", selected ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{String.fromCharCode(65 + oi)}</span>
+                      <span>{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+            <div className="mt-5 flex items-center justify-between">
+              <Button variant="outline" onClick={() => setCurrent((c) => Math.max(0, c - 1))} disabled={current === 0}>
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </Button>
+              {current < questions.length - 1 ? (
+                <Button onClick={() => setCurrent((c) => c + 1)} className="bg-gradient-primary hover:opacity-90">Next <ChevronRight className="h-4 w-4" /></Button>
+              ) : (
+                <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit quiz
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {phase === "result" && result && (
+          <div className="space-y-6 animate-fade-in-up">
+            <Card className="overflow-hidden text-center">
+              <div className="bg-gradient-hero p-8 text-primary-foreground">
+                <Trophy className="mx-auto h-10 w-10" />
+                <p className="mt-3 text-sm text-primary-foreground/80">Your score</p>
+                <p className="text-5xl font-bold">{Math.round(result.percentage)}%</p>
+                <p className="mt-1 text-primary-foreground/90">{result.score} / {result.total} correct · +{result.points} points</p>
+              </div>
+              {result.summary && (
+                <div className="flex items-start gap-2 p-5 text-left text-sm">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <p className="text-muted-foreground">{result.summary}</p>
+                </div>
+              )}
+            </Card>
+
+            <div className="space-y-3">
+              <h2 className="font-semibold">Review</h2>
+              {result.review.map((r, i) => (
+                <Card key={i} className="p-5">
+                  <div className="flex items-start gap-2">
+                    {r.correct ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" /> : <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />}
+                    <p className="font-medium">{r.question_text}</p>
+                  </div>
+                  <div className="mt-3 space-y-1.5 pl-7">
+                    {r.options.map((opt, oi) => (
+                      <div key={oi} className={cn("rounded-lg px-3 py-1.5 text-sm", oi === r.correct_index ? "bg-success/10 text-success" : oi === r.selected ? "bg-destructive/10 text-destructive" : "text-muted-foreground")}>
+                        {String.fromCharCode(65 + oi)}. {opt}
+                      </div>
+                    ))}
+                    {r.explanation && <p className="pt-1 text-sm text-muted-foreground"><b>Explanation:</b> {r.explanation}</p>}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
