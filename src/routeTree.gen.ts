@@ -20,8 +20,8 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as QuizShareCodeRouteImport } from './routes/quiz.$shareCode'
 import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
-import { Route as DashboardBatchesRouteImport } from './routes/dashboard.batches'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
+import { Route as DashboardBatchesIndexRouteImport } from './routes/dashboard.batches.index'
 import { Route as DashboardQuizQuizIdRouteImport } from './routes/dashboard.quiz.$quizId'
 import { Route as DashboardBatchesBatchIdRouteImport } from './routes/dashboard.batches.$batchId'
 import { Route as DashboardQuizQuizIdLiveRouteImport } from './routes/dashboard.quiz.$quizId.live'
@@ -81,14 +81,14 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardBatchesRoute = DashboardBatchesRouteImport.update({
-  id: '/batches',
-  path: '/batches',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBatchesIndexRoute = DashboardBatchesIndexRouteImport.update({
+  id: '/batches/',
+  path: '/batches/',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardQuizQuizIdRoute = DashboardQuizQuizIdRouteImport.update({
@@ -97,9 +97,9 @@ const DashboardQuizQuizIdRoute = DashboardQuizQuizIdRouteImport.update({
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBatchesBatchIdRoute = DashboardBatchesBatchIdRouteImport.update({
-  id: '/$batchId',
-  path: '/$batchId',
-  getParentRoute: () => DashboardBatchesRoute,
+  id: '/batches/$batchId',
+  path: '/batches/$batchId',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardQuizQuizIdLiveRoute = DashboardQuizQuizIdLiveRouteImport.update({
   id: '/live',
@@ -116,13 +116,13 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
-  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
+  '/dashboard/batches/': typeof DashboardBatchesIndexRoute
   '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
 }
 export interface FileRoutesByTo {
@@ -133,13 +133,13 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
-  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
+  '/dashboard/batches': typeof DashboardBatchesIndexRoute
   '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
 }
 export interface FileRoutesById {
@@ -152,13 +152,13 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
-  '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRoute
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
+  '/dashboard/batches/': typeof DashboardBatchesIndexRoute
   '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
 }
 export interface FileRouteTypes {
@@ -172,13 +172,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/dashboard/analytics'
-    | '/dashboard/batches'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
     | '/quiz/$shareCode'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
+    | '/dashboard/batches/'
     | '/dashboard/quiz/$quizId/live'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -189,13 +189,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/dashboard/analytics'
-    | '/dashboard/batches'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
     | '/quiz/$shareCode'
     | '/dashboard'
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
+    | '/dashboard/batches'
     | '/dashboard/quiz/$quizId/live'
   id:
     | '__root__'
@@ -207,13 +207,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/dashboard/analytics'
-    | '/dashboard/batches'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
     | '/quiz/$shareCode'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
+    | '/dashboard/batches/'
     | '/dashboard/quiz/$quizId/live'
   fileRoutesById: FileRoutesById
 }
@@ -307,18 +307,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/batches': {
-      id: '/dashboard/batches'
-      path: '/batches'
-      fullPath: '/dashboard/batches'
-      preLoaderRoute: typeof DashboardBatchesRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/analytics': {
       id: '/dashboard/analytics'
       path: '/analytics'
       fullPath: '/dashboard/analytics'
       preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/batches/': {
+      id: '/dashboard/batches/'
+      path: '/batches'
+      fullPath: '/dashboard/batches/'
+      preLoaderRoute: typeof DashboardBatchesIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/quiz/$quizId': {
@@ -330,10 +330,10 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/batches/$batchId': {
       id: '/dashboard/batches/$batchId'
-      path: '/$batchId'
+      path: '/batches/$batchId'
       fullPath: '/dashboard/batches/$batchId'
       preLoaderRoute: typeof DashboardBatchesBatchIdRouteImport
-      parentRoute: typeof DashboardBatchesRoute
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/quiz/$quizId/live': {
       id: '/dashboard/quiz/$quizId/live'
@@ -344,17 +344,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface DashboardBatchesRouteChildren {
-  DashboardBatchesBatchIdRoute: typeof DashboardBatchesBatchIdRoute
-}
-
-const DashboardBatchesRouteChildren: DashboardBatchesRouteChildren = {
-  DashboardBatchesBatchIdRoute: DashboardBatchesBatchIdRoute,
-}
-
-const DashboardBatchesRouteWithChildren =
-  DashboardBatchesRoute._addFileChildren(DashboardBatchesRouteChildren)
 
 interface DashboardQuizQuizIdRouteChildren {
   DashboardQuizQuizIdLiveRoute: typeof DashboardQuizQuizIdLiveRoute
@@ -369,20 +358,22 @@ const DashboardQuizQuizIdRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
-  DashboardBatchesRoute: typeof DashboardBatchesRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardQuizzesRoute: typeof DashboardQuizzesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardBatchesBatchIdRoute: typeof DashboardBatchesBatchIdRoute
   DashboardQuizQuizIdRoute: typeof DashboardQuizQuizIdRouteWithChildren
+  DashboardBatchesIndexRoute: typeof DashboardBatchesIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAnalyticsRoute: DashboardAnalyticsRoute,
-  DashboardBatchesRoute: DashboardBatchesRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardQuizzesRoute: DashboardQuizzesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardBatchesBatchIdRoute: DashboardBatchesBatchIdRoute,
   DashboardQuizQuizIdRoute: DashboardQuizQuizIdRouteWithChildren,
+  DashboardBatchesIndexRoute: DashboardBatchesIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -402,3 +393,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
