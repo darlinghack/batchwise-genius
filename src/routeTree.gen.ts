@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
 import { Route as DashboardBatchesRouteImport } from './routes/dashboard.batches'
+import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
 import { Route as DashboardQuizQuizIdRouteImport } from './routes/dashboard.quiz.$quizId'
 import { Route as DashboardBatchesBatchIdRouteImport } from './routes/dashboard.batches.$batchId'
 import { Route as DashboardQuizQuizIdLiveRouteImport } from './routes/dashboard.quiz.$quizId.live'
@@ -67,6 +68,11 @@ const DashboardBatchesRoute = DashboardBatchesRouteImport.update({
   path: '/batches',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardQuizQuizIdRoute = DashboardQuizQuizIdRouteImport.update({
   id: '/quiz/$quizId',
   path: '/quiz/$quizId',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/batches': typeof DashboardBatchesRouteWithChildren
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/dashboard/analytics'
     | '/dashboard/batches'
     | '/dashboard/quizzes'
     | '/dashboard/'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/dashboard/analytics'
     | '/dashboard/batches'
     | '/dashboard/quizzes'
     | '/dashboard'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/reset-password'
+    | '/dashboard/analytics'
     | '/dashboard/batches'
     | '/dashboard/quizzes'
     | '/dashboard/'
@@ -243,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBatchesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/analytics': {
+      id: '/dashboard/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/analytics'
+      preLoaderRoute: typeof DashboardAnalyticsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/quiz/$quizId': {
       id: '/dashboard/quiz/$quizId'
       path: '/quiz/$quizId'
@@ -290,6 +309,7 @@ const DashboardQuizQuizIdRouteWithChildren =
   DashboardQuizQuizIdRoute._addFileChildren(DashboardQuizQuizIdRouteChildren)
 
 interface DashboardRouteChildren {
+  DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardBatchesRoute: typeof DashboardBatchesRouteWithChildren
   DashboardQuizzesRoute: typeof DashboardQuizzesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -297,6 +317,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardBatchesRoute: DashboardBatchesRouteWithChildren,
   DashboardQuizzesRoute: DashboardQuizzesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
