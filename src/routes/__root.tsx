@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "AI-powered quiz and assessment platform for internship and training programs. Create quizzes instantly, track submissions live, and analyze batch performance.",
       },
       { name: "author", content: "Datapro" },
-      { property: "og:title", content: "Datapro QuizHub" },
+      { property: "og:title", content: "Datapro QuizHub — AI Assessment Platform" },
       {
         property: "og:description",
         content: "AI-Powered Assessment Platform for Internship & Training Programs.",
@@ -95,6 +95,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Datapro QuizHub — AI Assessment Platform" },
+      { name: "description", content: "Datapro QuizHub is an AI-powered SaaS platform for automated quiz creation, assessment, and performance analytics." },
+      { property: "og:description", content: "Datapro QuizHub is an AI-powered SaaS platform for automated quiz creation, assessment, and performance analytics." },
+      { name: "twitter:description", content: "Datapro QuizHub is an AI-powered SaaS platform for automated quiz creation, assessment, and performance analytics." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/AOAlJpDboXa1rZqrJYBtHTWpyHe2/social-images/social-1780490637185-data.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/AOAlJpDboXa1rZqrJYBtHTWpyHe2/social-images/social-1780490637185-data.webp" },
     ],
     links: [
       {
