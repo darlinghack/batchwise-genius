@@ -46,9 +46,11 @@ function QuizEditor() {
   const { quizId } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [questions, setQuestions] = useState<EditQuestion[]>([]);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const { data: quiz, isLoading } = useQuery({
     queryKey: ["quiz", quizId],
@@ -155,6 +157,21 @@ function QuizEditor() {
     toast.success(status === "published" ? "Quiz published!" : status === "closed" ? "Quiz closed." : "Reverted to draft.");
     qc.invalidateQueries({ queryKey: ["quiz", quizId] });
     qc.invalidateQueries({ queryKey: ["quizzes-list"] });
+  }
+
+  async function handleSaveTemplate() {
+    if (!user) return;
+    setSavingTemplate(true);
+    try {
+      await saveAll();
+      await saveQuizAsTemplate(quizId, user.id);
+      toast.success("Saved to Template Library!");
+      navigate({ to: "/dashboard/templates" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save template");
+    } finally {
+      setSavingTemplate(false);
+    }
   }
 
   if (isLoading || !quiz) {
