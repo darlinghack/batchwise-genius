@@ -10,11 +10,23 @@ interface QuestionRow {
   difficulty: Difficulty;
 }
 
-function mapQuestions(rows: QuestionRow[], key: "template_id" | "quiz_id", parentId: string) {
+function toTemplateRows(rows: QuestionRow[], templateId: string) {
   return rows.map((q, i) => ({
-    [key]: parentId,
+    template_id: templateId,
     question_text: q.question_text,
-    options: q.options,
+    options: q.options as never,
+    correct_index: q.correct_index,
+    explanation: q.explanation,
+    difficulty: q.difficulty,
+    position: i,
+  }));
+}
+
+function toQuizRows(rows: QuestionRow[], quizId: string) {
+  return rows.map((q, i) => ({
+    quiz_id: quizId,
+    question_text: q.question_text,
+    options: q.options as never,
     correct_index: q.correct_index,
     explanation: q.explanation,
     difficulty: q.difficulty,
@@ -55,7 +67,7 @@ export async function saveQuizAsTemplate(quizId: string, trainerId: string): Pro
   if (te || !tpl) throw new Error(te?.message ?? "Failed to create template");
 
   if (questions?.length) {
-    const rows = mapQuestions(questions as QuestionRow[], "template_id", tpl.id);
+    const rows = toTemplateRows(questions as QuestionRow[], tpl.id);
     const { error: ie } = await supabase.from("template_questions").insert(rows);
     if (ie) throw new Error(ie.message);
   }
@@ -105,7 +117,7 @@ export async function cloneTemplateToBatch(templateId: string, target: CloneTarg
   if (ce || !quiz) throw new Error(ce?.message ?? "Failed to clone template");
 
   if (tq?.length) {
-    const rows = mapQuestions(tq as QuestionRow[], "quiz_id", quiz.id);
+    const rows = toQuizRows(tq as QuestionRow[], quiz.id);
     const { error: ie } = await supabase.from("questions").insert(rows);
     if (ie) throw new Error(ie.message);
   }
@@ -148,7 +160,7 @@ export async function cloneQuizToBatch(quizId: string, target: CloneTarget): Pro
   if (ce || !quiz) throw new Error(ce?.message ?? "Failed to clone quiz");
 
   if (questions?.length) {
-    const rows = mapQuestions(questions as QuestionRow[], "quiz_id", quiz.id);
+    const rows = toQuizRows(questions as QuestionRow[], quiz.id);
     const { error: ie } = await supabase.from("questions").insert(rows);
     if (ie) throw new Error(ie.message);
   }
