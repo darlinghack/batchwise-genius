@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -16,7 +16,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Sparkles, Loader2, Download, Trophy, AlertTriangle } from "lucide-react";
+import { Sparkles, Loader2, Download, Trophy, AlertTriangle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
 import { StatCard } from "@/components/StatCard";
@@ -61,6 +61,14 @@ function AnalyticsPage() {
     })
     .filter((x) => x.attempts > 0)
     .slice(0, 8);
+
+  const quizLinks = quizzes
+    .map((q) => {
+      const qs = subs.filter((s) => s.quiz_id === q.id);
+      const a = qs.length ? Math.round(qs.reduce((x, s) => x + Number(s.percentage), 0) / qs.length) : 0;
+      return { id: q.id, title: q.title, attempts: qs.length, avg: a };
+    })
+    .sort((a, b) => b.attempts - a.attempts);
 
   // top & weak students (by avg %)
   const byStudent = new Map<string, { name: string; total: number; count: number }>();
@@ -111,8 +119,8 @@ function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-sm text-muted-foreground">Performance across all your quizzes and batches.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Organization Analytics</h1>
+          <p className="text-sm text-muted-foreground">Company-wide view across every batch and quiz. Drill into a batch or quiz for isolated results.</p>
         </div>
         <Button variant="outline" onClick={exportCsv} disabled={!attempts}><Download className="h-4 w-4" /> Export CSV</Button>
       </div>
@@ -206,6 +214,31 @@ function AnalyticsPage() {
           ) : <p className="text-sm text-muted-foreground">No data yet</p>}
         </Card>
       </div>
+
+      <Card className="p-5">
+        <h2 className="mb-4 font-semibold">All Quizzes</h2>
+        {quizLinks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No quizzes yet.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {quizLinks.map((q) => (
+              <Link
+                key={q.id}
+                to="/dashboard/quiz/$quizId/results"
+                params={{ quizId: q.id }}
+                className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-accent/30"
+              >
+                <p className="truncate font-medium">{q.title}</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">{q.attempts} subs</span>
+                  <Badge variant="secondary">{q.avg}% avg</Badge>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
