@@ -11,7 +11,6 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Cell,
 } from "recharts";
 import {
   ArrowLeft,
