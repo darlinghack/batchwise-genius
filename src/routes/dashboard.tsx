@@ -9,6 +9,7 @@ import {
   LogOut,
   Loader2,
   Menu,
+  BookMarked,
 } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
@@ -25,7 +26,8 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/batches", label: "Batches", icon: Layers },
   { to: "/dashboard/quizzes", label: "Quizzes", icon: FileQuestion },
-  { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/dashboard/templates", label: "Templates", icon: BookMarked },
+  { to: "/dashboard/analytics", label: "Organization", icon: BarChart3 },
   { to: "/dashboard/profile", label: "Profile", icon: User },
 ];
 
