@@ -111,8 +111,8 @@ function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-sm text-muted-foreground">Performance across all your quizzes and batches.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Organization Analytics</h1>
+          <p className="text-sm text-muted-foreground">Company-wide view across every batch and quiz. Drill into a batch or quiz for isolated results.</p>
         </div>
         <Button variant="outline" onClick={exportCsv} disabled={!attempts}><Download className="h-4 w-4" /> Export CSV</Button>
       </div>
