@@ -1,10 +1,30 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { FileQuestion, Loader2, Sparkles, Radio, Clock } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { FileQuestion, Loader2, Sparkles, Radio, Clock, BarChart3, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { cloneQuizToBatch } from "@/lib/library";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/dashboard/quizzes")({
   head: () => ({ meta: [{ title: "Quizzes — Datapro QuizHub" }] }),
@@ -18,6 +38,13 @@ const statusStyle: Record<string, string> = {
 };
 
 function QuizzesPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [cloneQuiz, setCloneQuiz] = useState<{ id: string; title: string } | null>(null);
+  const [batchId, setBatchId] = useState("");
+  const [title, setTitle] = useState("");
+  const [cloning, setCloning] = useState(false);
+
   const { data: quizzes, isLoading } = useQuery({
     queryKey: ["quizzes-list"],
     queryFn: async () => {
@@ -28,6 +55,36 @@ function QuizzesPage() {
       return data ?? [];
     },
   });
+
+  const { data: batches } = useQuery({
+    queryKey: ["batches-mini"],
+    queryFn: async () => {
+      const { data } = await supabase.from("batches").select("id, name").order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  function openClone(q: { id: string; title: string }) {
+    setCloneQuiz(q);
+    setTitle(q.title);
+    setBatchId("");
+  }
+
+  async function handleClone() {
+    if (!user || !cloneQuiz) return;
+    if (!batchId) return toast.error("Choose a batch to clone into.");
+    setCloning(true);
+    try {
+      const quizId = await cloneQuizToBatch(cloneQuiz.id, { trainerId: user.id, batchId, title });
+      toast.success("Cloned into a fresh, independent quiz.");
+      setCloneQuiz(null);
+      navigate({ to: "/dashboard/quiz/$quizId", params: { quizId } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Clone failed");
+    } finally {
+      setCloning(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
