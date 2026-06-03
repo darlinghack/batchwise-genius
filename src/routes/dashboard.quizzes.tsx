@@ -117,14 +117,22 @@ function QuizzesPage() {
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {q.duration_minutes}m</span>
                   <span>{subCount} submissions</span>
                 </div>
-                <div className="mt-4 flex gap-2 pt-2">
+                <div className="mt-4 flex flex-wrap gap-2 pt-2">
                   <Button size="sm" variant="outline" asChild className="flex-1">
                     <Link to="/dashboard/quiz/$quizId" params={{ quizId: q.id }}><Sparkles className="h-3.5 w-3.5" /> Edit</Link>
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => openClone({ id: q.id, title: q.title })} title="Clone into another batch">
+                    <Copy className="h-3.5 w-3.5" /> Clone
+                  </Button>
                   {q.status !== "draft" && (
-                    <Button size="sm" asChild className="flex-1 bg-gradient-primary hover:opacity-90">
-                      <Link to="/dashboard/quiz/$quizId/live" params={{ quizId: q.id }}><Radio className="h-3.5 w-3.5" /> Live</Link>
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" asChild className="flex-1">
+                        <Link to="/dashboard/quiz/$quizId/results" params={{ quizId: q.id }}><BarChart3 className="h-3.5 w-3.5" /> Results</Link>
+                      </Button>
+                      <Button size="sm" asChild className="flex-1 bg-gradient-primary hover:opacity-90">
+                        <Link to="/dashboard/quiz/$quizId/live" params={{ quizId: q.id }}><Radio className="h-3.5 w-3.5" /> Live</Link>
+                      </Button>
+                    </>
                   )}
                 </div>
               </Card>
