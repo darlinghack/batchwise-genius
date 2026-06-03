@@ -28,6 +28,7 @@ import { Route as DashboardQuizQuizIdIndexRouteImport } from './routes/dashboard
 import { Route as DashboardBatchesBatchIdIndexRouteImport } from './routes/dashboard.batches.$batchId.index'
 import { Route as DashboardQuizQuizIdResultsRouteImport } from './routes/dashboard.quiz.$quizId.results'
 import { Route as DashboardQuizQuizIdLiveRouteImport } from './routes/dashboard.quiz.$quizId.live'
+import { Route as DashboardBatchesBatchIdAnalyticsRouteImport } from './routes/dashboard.batches.$batchId.analytics'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -127,6 +128,12 @@ const DashboardQuizQuizIdLiveRoute = DashboardQuizQuizIdLiveRouteImport.update({
   path: '/live',
   getParentRoute: () => DashboardQuizQuizIdRoute,
 } as any)
+const DashboardBatchesBatchIdAnalyticsRoute =
+  DashboardBatchesBatchIdAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => DashboardBatchesBatchIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRouteWithChildren
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
   '/dashboard/batches/': typeof DashboardBatchesIndexRoute
+  '/dashboard/batches/$batchId/analytics': typeof DashboardBatchesBatchIdAnalyticsRoute
   '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
   '/dashboard/quiz/$quizId/results': typeof DashboardQuizQuizIdResultsRoute
   '/dashboard/batches/$batchId/': typeof DashboardBatchesBatchIdIndexRoute
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/batches': typeof DashboardBatchesIndexRoute
+  '/dashboard/batches/$batchId/analytics': typeof DashboardBatchesBatchIdAnalyticsRoute
   '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
   '/dashboard/quiz/$quizId/results': typeof DashboardQuizQuizIdResultsRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdIndexRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRouteWithChildren
   '/dashboard/quiz/$quizId': typeof DashboardQuizQuizIdRouteWithChildren
   '/dashboard/batches/': typeof DashboardBatchesIndexRoute
+  '/dashboard/batches/$batchId/analytics': typeof DashboardBatchesBatchIdAnalyticsRoute
   '/dashboard/quiz/$quizId/live': typeof DashboardQuizQuizIdLiveRoute
   '/dashboard/quiz/$quizId/results': typeof DashboardQuizQuizIdResultsRoute
   '/dashboard/batches/$batchId/': typeof DashboardBatchesBatchIdIndexRoute
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
     | '/dashboard/batches/'
+    | '/dashboard/batches/$batchId/analytics'
     | '/dashboard/quiz/$quizId/live'
     | '/dashboard/quiz/$quizId/results'
     | '/dashboard/batches/$batchId/'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/quiz/$shareCode'
     | '/dashboard'
     | '/dashboard/batches'
+    | '/dashboard/batches/$batchId/analytics'
     | '/dashboard/quiz/$quizId/live'
     | '/dashboard/quiz/$quizId/results'
     | '/dashboard/batches/$batchId'
@@ -246,6 +258,7 @@ export interface FileRouteTypes {
     | '/dashboard/batches/$batchId'
     | '/dashboard/quiz/$quizId'
     | '/dashboard/batches/'
+    | '/dashboard/batches/$batchId/analytics'
     | '/dashboard/quiz/$quizId/live'
     | '/dashboard/quiz/$quizId/results'
     | '/dashboard/batches/$batchId/'
@@ -398,15 +411,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardQuizQuizIdLiveRouteImport
       parentRoute: typeof DashboardQuizQuizIdRoute
     }
+    '/dashboard/batches/$batchId/analytics': {
+      id: '/dashboard/batches/$batchId/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/batches/$batchId/analytics'
+      preLoaderRoute: typeof DashboardBatchesBatchIdAnalyticsRouteImport
+      parentRoute: typeof DashboardBatchesBatchIdRoute
+    }
   }
 }
 
 interface DashboardBatchesBatchIdRouteChildren {
+  DashboardBatchesBatchIdAnalyticsRoute: typeof DashboardBatchesBatchIdAnalyticsRoute
   DashboardBatchesBatchIdIndexRoute: typeof DashboardBatchesBatchIdIndexRoute
 }
 
 const DashboardBatchesBatchIdRouteChildren: DashboardBatchesBatchIdRouteChildren =
   {
+    DashboardBatchesBatchIdAnalyticsRoute:
+      DashboardBatchesBatchIdAnalyticsRoute,
     DashboardBatchesBatchIdIndexRoute: DashboardBatchesBatchIdIndexRoute,
   }
 
