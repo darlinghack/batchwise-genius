@@ -12,6 +12,7 @@ import {
   Circle,
   CalendarRange,
   Layers,
+  BarChart3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -205,9 +206,14 @@ function BatchDetail() {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" asChild className="-ml-2">
-        <Link to="/dashboard/batches"><ArrowLeft className="h-4 w-4" /> Back to batches</Link>
-      </Button>
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="ghost" size="sm" asChild className="-ml-2">
+          <Link to="/dashboard/batches"><ArrowLeft className="h-4 w-4" /> Back to batches</Link>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/dashboard/batches/$batchId/analytics" params={{ batchId }}><BarChart3 className="h-4 w-4" /> Batch analytics</Link>
+        </Button>
+      </div>
 
       <Card className="overflow-hidden">
         <div className="bg-gradient-hero p-6 text-primary-foreground">
