@@ -147,6 +147,39 @@ function QuizzesPage() {
           <Button asChild className="mt-2 bg-gradient-primary hover:opacity-90"><Link to="/dashboard/batches">Go to batches</Link></Button>
         </Card>
       )}
+
+      <Dialog open={!!cloneQuiz} onOpenChange={(o) => !o && setCloneQuiz(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clone quiz into another batch</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Quiz title</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Quiz title" />
+            </div>
+            <div className="space-y-2">
+              <Label>Target batch</Label>
+              <Select value={batchId} onValueChange={setBatchId}>
+                <SelectTrigger><SelectValue placeholder="Select a batch" /></SelectTrigger>
+                <SelectContent>
+                  {(batches ?? []).map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="rounded-lg bg-accent/40 p-3 text-xs text-muted-foreground">
+              The clone copies the same questions but starts fresh — separate submissions, leaderboard, and analytics from the original.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleClone} disabled={cloning} className="bg-gradient-primary hover:opacity-90">
+              {cloning ? <><Loader2 className="h-4 w-4 animate-spin" /> Cloning…</> : <><Copy className="h-4 w-4" /> Create clone</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
