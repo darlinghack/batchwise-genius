@@ -1,0 +1,312 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Cell,
+} from "recharts";
+import {
+  ArrowLeft,
+  Loader2,
+  Trophy,
+  Sparkles,
+  Download,
+  Crown,
+  Medal,
+  TrendingUp,
+  Send,
+  AlertTriangle,
+  CheckCircle2,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { getBatchInsight } from "@/lib/quiz.functions";
+import { StatCard } from "@/components/StatCard";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/dashboard/quiz/$quizId/results")({
+  head: () => ({ meta: [{ title: "Quiz results — Datapro QuizHub" }] }),
+  component: QuizResults,
+});
+
+interface Sub {
+  id: string;
+  student_name: string;
+  student_email: string;
+  score: number;
+  total: number;
+  percentage: number;
+  time_taken_seconds: number;
+  answers: { questionId: string; selected: number }[];
+}
+
+interface Q {
+  id: string;
+  question_text: string;
+  correct_index: number;
+  position: number;
+}
+
+function QuizResults() {
+  const { quizId } = Route.useParams();
+  const insightFn = useServerFn(getBatchInsight);
+  const [insight, setInsight] = useState("");
+  const [loadingInsight, setLoadingInsight] = useState(false);
+
+  const { data: quiz } = useQuery({
+    queryKey: ["quiz-results-meta", quizId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("quizzes")
+        .select("id, title, topic_name, type, difficulty, num_questions, batch_id")
+        .eq("id", quizId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["quiz-results", quizId],
+    queryFn: async () => {
+      const [subs, questions] = await Promise.all([
+        supabase
+          .from("submissions")
+          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers")
+          .eq("quiz_id", quizId),
+        supabase
+          .from("questions")
+          .select("id, question_text, correct_index, position")
+          .eq("quiz_id", quizId)
+          .order("position", { ascending: true }),
+      ]);
+      return {
+        subs: (subs.data as unknown as Sub[]) ?? [],
+        questions: (questions.data as Q[]) ?? [],
+      };
+    },
+  });
+
+  // realtime — scoped strictly to this quiz instance
+  useEffect(() => {
+    const channel = supabase
+      .channel(`results-${quizId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "submissions", filter: `quiz_id=eq.${quizId}` },
+        () => refetch(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [quizId, refetch]);
+
+  const subs = data?.subs ?? [];
+  const questions = data?.questions ?? [];
+  const attempts = subs.length;
+  const avg = attempts ? Math.round(subs.reduce((a, s) => a + Number(s.percentage), 0) / attempts) : 0;
+  const high = attempts ? Math.round(Math.max(...subs.map((s) => Number(s.percentage)))) : 0;
+  const passed = subs.filter((s) => Number(s.percentage) >= 60).length;
+  const passPct = attempts ? Math.round((passed / attempts) * 100) : 0;
+
+  const ranked = [...subs].sort((a, b) =>
+    b.percentage !== a.percentage ? b.percentage - a.percentage : a.time_taken_seconds - b.time_taken_seconds,
+  );
+
+  // score distribution buckets
+  const buckets = [
+    { name: "0–20", min: 0, max: 20 },
+    { name: "21–40", min: 20, max: 40 },
+    { name: "41–60", min: 40, max: 60 },
+    { name: "61–80", min: 60, max: 80 },
+    { name: "81–100", min: 80, max: 100.01 },
+  ];
+  const distribution = buckets.map((b) => ({
+    name: b.name,
+    count: subs.filter((s) => Number(s.percentage) > b.min && Number(s.percentage) <= b.max).length,
+  }));
+  // include exactly-0 scores in the first bucket
+  distribution[0].count += subs.filter((s) => Number(s.percentage) === 0).length;
+
+  // question-wise analysis
+  const questionStats = questions.map((q, i) => {
+    let correct = 0;
+    let answered = 0;
+    subs.forEach((s) => {
+      const a = (s.answers ?? []).find((x) => x.questionId === q.id);
+      if (a && a.selected >= 0) {
+        answered += 1;
+        if (a.selected === q.correct_index) correct += 1;
+      }
+    });
+    const accuracy = answered ? Math.round((correct / answered) * 100) : 0;
+    return { idx: i + 1, question_text: q.question_text, accuracy, correct, answered };
+  });
+  const hardest = [...questionStats].filter((q) => q.answered > 0).sort((a, b) => a.accuracy - b.accuracy);
+
+  const barColor = (v: number) =>
+    v >= 70 ? "oklch(0.62 0.16 155)" : v >= 40 ? "oklch(0.7 0.16 70)" : "oklch(0.58 0.23 27)";
+
+  async function generateInsight() {
+    setLoadingInsight(true);
+    const weak = hardest.slice(0, 4).map((q) => `Q${q.idx} (${q.accuracy}%)`).join(", ");
+    const ctx = `Quiz "${quiz?.title}". Attempts: ${attempts}. Average: ${avg}%. Pass rate: ${passPct}%. Hardest questions: ${weak || "none"}.`;
+    try {
+      const res = await insightFn({ data: { context: ctx } });
+      if (res.insight) setInsight(res.insight);
+      else toast.error(res.error || "Could not generate insight");
+    } finally {
+      setLoadingInsight(false);
+    }
+  }
+
+  function exportCsv() {
+    const rows = [["Rank", "Student", "Email", "Score", "Total", "Percentage", "Time (s)"]];
+    ranked.forEach((s, i) =>
+      rows.push([String(i + 1), s.student_name, s.student_email, String(s.score), String(s.total), String(s.percentage), String(s.time_taken_seconds)]),
+    );
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${quiz?.title ?? "quiz"}-results.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const rankIcon = (i: number) =>
+    i === 0 ? <Crown className="h-4 w-4 text-warning" /> : i === 1 ? <Medal className="h-4 w-4 text-muted-foreground" /> : i === 2 ? <Medal className="h-4 w-4 text-chart-5" /> : null;
+
+  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button variant="ghost" size="sm" asChild className="-ml-2">
+          <Link to="/dashboard/quiz/$quizId" params={{ quizId }}><ArrowLeft className="h-4 w-4" /> Back to quiz</Link>
+        </Button>
+        <div className="flex gap-2">
+          {quiz?.batch_id && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dashboard/batches/$batchId/analytics" params={{ batchId: quiz.batch_id }}>Batch analytics</Link>
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!attempts}><Download className="h-4 w-4" /> Export</Button>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight">{quiz?.title ?? "Quiz results"}</h1>
+          {quiz && <Badge variant="secondary" className="capitalize">{quiz.difficulty}</Badge>}
+        </div>
+        <p className="text-sm text-muted-foreground">Isolated results for this quiz instance only — never merged with other quizzes.</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Submissions" value={attempts} icon={Send} />
+        <StatCard label="Average Score" value={`${avg}%`} icon={TrendingUp} accent="success" />
+        <StatCard label="Highest" value={`${high}%`} icon={Trophy} accent="chart-3" />
+        <StatCard label="Pass Rate" value={`${passPct}%`} icon={CheckCircle2} accent="warning" />
+      </div>
+
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> AI Insights</h2>
+          <Button size="sm" onClick={generateInsight} disabled={loadingInsight || !attempts} className="bg-gradient-primary hover:opacity-90">
+            {loadingInsight ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Generate
+          </Button>
+        </div>
+        {insight ? (
+          <p className="rounded-lg bg-accent/40 p-4 text-sm leading-relaxed">{insight}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Generate an AI summary of this quiz's strengths, weak questions, and recommendations.</p>
+        )}
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="p-5">
+          <h2 className="mb-4 font-semibold">Score Distribution</h2>
+          <div className="h-64">
+            {attempts ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={distribution} margin={{ left: -20, top: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.012 255)" vertical={false} />
+                  <XAxis dataKey="name" stroke="oklch(0.55 0.035 257)" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} stroke="oklch(0.55 0.035 257)" fontSize={12} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid oklch(0.92 0.012 255)", fontSize: 12 }} />
+                  <Bar dataKey="count" name="Students" radius={[6, 6, 0, 0]} fill="oklch(0.52 0.21 263)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">No submissions yet</div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border bg-gradient-hero p-5 text-primary-foreground">
+            <div className="flex items-center gap-2 font-semibold"><Trophy className="h-5 w-5" /> Leaderboard</div>
+            <Badge variant="secondary" className="bg-white/20 text-primary-foreground">{attempts} ranked</Badge>
+          </div>
+          <div className="max-h-64 divide-y divide-border overflow-y-auto">
+            {ranked.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">No submissions yet.</p>
+            ) : (
+              ranked.slice(0, 25).map((s, i) => (
+                <div key={s.id} className={cn("flex items-center gap-3 px-5 py-2.5", i < 3 && "bg-primary/5")}>
+                  <div className="flex w-7 items-center justify-center font-bold text-muted-foreground">{rankIcon(i) ?? i + 1}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{s.student_name}</p>
+                    <p className="text-xs text-muted-foreground">{Math.floor(s.time_taken_seconds / 60)}m {s.time_taken_seconds % 60}s</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-primary">{Math.round(Number(s.percentage))}%</p>
+                    <p className="text-xs text-muted-foreground">{s.score}/{s.total}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-5">
+        <h2 className="mb-4 flex items-center gap-2 font-semibold"><AlertTriangle className="h-4 w-4 text-warning" /> Question-wise Analysis</h2>
+        {questionStats.length === 0 ? (
+          <p className="text-sm text-muted-foreground">This quiz has no questions.</p>
+        ) : attempts === 0 ? (
+          <p className="text-sm text-muted-foreground">Accuracy will appear once students submit.</p>
+        ) : (
+          <div className="space-y-3">
+            {questionStats.map((q) => (
+              <div key={q.idx} className="flex items-center gap-3">
+                <span className="w-8 shrink-0 text-xs font-semibold text-muted-foreground">Q{q.idx}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm">{q.question_text}</p>
+                  <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full" style={{ width: `${q.accuracy}%`, background: barColor(q.accuracy) }} />
+                  </div>
+                </div>
+                <span className="w-20 shrink-0 text-right text-sm font-semibold" style={{ color: barColor(q.accuracy) }}>
+                  {q.accuracy}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
