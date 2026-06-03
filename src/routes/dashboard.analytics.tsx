@@ -214,6 +214,31 @@ function AnalyticsPage() {
           ) : <p className="text-sm text-muted-foreground">No data yet</p>}
         </Card>
       </div>
+
+      <Card className="p-5">
+        <h2 className="mb-4 font-semibold">All Quizzes</h2>
+        {quizLinks.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No quizzes yet.</p>
+        ) : (
+          <div className="divide-y divide-border">
+            {quizLinks.map((q) => (
+              <Link
+                key={q.id}
+                to="/dashboard/quiz/$quizId/results"
+                params={{ quizId: q.id }}
+                className="flex items-center justify-between gap-3 py-3 transition-colors hover:bg-accent/30"
+              >
+                <p className="truncate font-medium">{q.title}</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">{q.attempts} subs</span>
+                  <Badge variant="secondary">{q.avg}% avg</Badge>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
