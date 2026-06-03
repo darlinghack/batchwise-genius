@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -16,7 +16,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Sparkles, Loader2, Download, Trophy, AlertTriangle } from "lucide-react";
+import { Sparkles, Loader2, Download, Trophy, AlertTriangle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
 import { StatCard } from "@/components/StatCard";
@@ -61,6 +61,14 @@ function AnalyticsPage() {
     })
     .filter((x) => x.attempts > 0)
     .slice(0, 8);
+
+  const quizLinks = quizzes
+    .map((q) => {
+      const qs = subs.filter((s) => s.quiz_id === q.id);
+      const a = qs.length ? Math.round(qs.reduce((x, s) => x + Number(s.percentage), 0) / qs.length) : 0;
+      return { id: q.id, title: q.title, attempts: qs.length, avg: a };
+    })
+    .sort((a, b) => b.attempts - a.attempts);
 
   // top & weak students (by avg %)
   const byStudent = new Map<string, { name: string; total: number; count: number }>();
