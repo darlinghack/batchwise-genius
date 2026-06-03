@@ -196,6 +196,14 @@ function QuizEditor() {
           <Button variant="outline" onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
           </Button>
+          <Button variant="outline" onClick={handleSaveTemplate} disabled={savingTemplate}>
+            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />} Save as template
+          </Button>
+          {quiz.status !== "draft" && (
+            <Button variant="outline" asChild>
+              <Link to="/dashboard/quiz/$quizId/results" params={{ quizId }}><BarChart3 className="h-4 w-4" /> Results</Link>
+            </Button>
+          )}
           {quiz.status === "draft" && (
             <Button onClick={() => setStatus("published")} disabled={publishing} className="bg-gradient-primary hover:opacity-90">
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Publish
