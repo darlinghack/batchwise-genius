@@ -432,6 +432,30 @@ function BatchDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!quizToDelete} onOpenChange={(o) => !o && setQuizToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" /> Delete Quiz
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will permanently delete the quiz and all its questions and submissions. This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuizToDelete(null)} disabled={deleting}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => quizToDelete && handleDelete(quizToDelete)}
+              disabled={deleting}
+            >
+              {deleting ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</> : <><Trash2 className="h-4 w-4" /> Delete</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
