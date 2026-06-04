@@ -297,6 +297,44 @@ function BatchDetail() {
         </Card>
       </div>
 
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-semibold">Quizzes in this batch</h2>
+          {batchQuizzes && batchQuizzes.length > 0 && (
+            <Badge variant="secondary">{batchQuizzes.length}</Badge>
+          )}
+        </div>
+        {quizzesLoading ? (
+          <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        ) : batchQuizzes && batchQuizzes.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {batchQuizzes.map((q) => (
+              <Link
+                key={q.id}
+                to="/dashboard/quiz/$quizId"
+                params={{ quizId: q.id }}
+                className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/50"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <FileQuestion className="h-4 w-4 shrink-0 text-primary" />
+                    <p className="truncate font-medium">{q.title}</p>
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span className="capitalize">{q.difficulty}</span>
+                    <span>{q.num_questions} Qs</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {q.duration_minutes}m</span>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="shrink-0 capitalize">{q.status}</Badge>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="py-8 text-center text-sm text-muted-foreground">No quizzes yet. Generate one from a topic above or clone a template into this batch.</p>
+        )}
+      </Card>
+
       {/* Generate daily quiz dialog */}
       <Dialog open={!!genTopic} onOpenChange={(o) => !o && setGenTopic(null)}>
         <DialogContent>
