@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { generateQuizQuestions } from "@/lib/quiz.functions";
+import { generateQuizQuestions, deleteQuiz } from "@/lib/quiz.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
