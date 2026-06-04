@@ -55,6 +55,10 @@ function BatchDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const generate = useServerFn(generateQuizQuestions);
+  const delQuiz = useServerFn(deleteQuiz);
+
+  const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [topicTitle, setTopicTitle] = useState("");
   const [addingTopic, setAddingTopic] = useState(false);
