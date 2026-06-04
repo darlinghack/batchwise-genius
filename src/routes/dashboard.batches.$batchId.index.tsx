@@ -156,6 +156,7 @@ function BatchDetail() {
     }));
     const { error: qErr } = await supabase.from("questions").insert(rows);
     if (qErr) throw new Error(qErr.message);
+    qc.invalidateQueries({ queryKey: ["batch-quizzes", batchId] });
     return quiz.id;
   }
 
