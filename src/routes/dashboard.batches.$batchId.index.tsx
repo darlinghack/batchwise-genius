@@ -13,6 +13,8 @@ import {
   CalendarRange,
   Layers,
   BarChart3,
+  FileQuestion,
+  Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -78,6 +80,18 @@ function BatchDetail() {
         .select("*")
         .eq("batch_id", batchId)
         .order("day_number", { ascending: true });
+      return data ?? [];
+    },
+  });
+
+  const { data: batchQuizzes, isLoading: quizzesLoading } = useQuery({
+    queryKey: ["batch-quizzes", batchId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("quizzes")
+        .select("id, title, type, difficulty, status, num_questions, duration_minutes, created_at")
+        .eq("batch_id", batchId)
+        .order("created_at", { ascending: false });
       return data ?? [];
     },
   });
