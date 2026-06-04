@@ -15,10 +15,12 @@ import {
   BarChart3,
   FileQuestion,
   Clock,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { generateQuizQuestions } from "@/lib/quiz.functions";
+import { generateQuizQuestions, deleteQuiz } from "@/lib/quiz.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +55,10 @@ function BatchDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const generate = useServerFn(generateQuizQuestions);
+  const delQuiz = useServerFn(deleteQuiz);
+
+  const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [topicTitle, setTopicTitle] = useState("");
   const [addingTopic, setAddingTopic] = useState(false);
@@ -186,6 +192,20 @@ function BatchDetail() {
     }
   }
 
+  async function handleDelete(quizId: string) {
+    setDeleting(true);
+    try {
+      await delQuiz({ data: { quizId } });
+      toast.success("Quiz deleted");
+      qc.invalidateQueries({ queryKey: ["batch-quizzes", batchId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+      setQuizToDelete(null);
+    }
+  }
+
   async function handleWeekend() {
     const chosen = (topics ?? []).filter((t) => selected.includes(t.id));
     if (chosen.length < 2) return toast.error("Select at least 2 topics.");
@@ -310,13 +330,15 @@ function BatchDetail() {
         ) : batchQuizzes && batchQuizzes.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {batchQuizzes.map((q) => (
-              <Link
+              <div
                 key={q.id}
-                to="/dashboard/quiz/$quizId"
-                params={{ quizId: q.id }}
-                className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/50"
+                className="group flex items-start justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/50"
               >
-                <div className="min-w-0">
+                <Link
+                  to="/dashboard/quiz/$quizId"
+                  params={{ quizId: q.id }}
+                  className="flex-1 min-w-0"
+                >
                   <div className="flex items-center gap-2">
                     <FileQuestion className="h-4 w-4 shrink-0 text-primary" />
                     <p className="truncate font-medium">{q.title}</p>
@@ -326,9 +348,19 @@ function BatchDetail() {
                     <span>{q.num_questions} Qs</span>
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {q.duration_minutes}m</span>
                   </div>
+                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant="secondary" className="capitalize">{q.status}</Badge>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setQuizToDelete(q.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Badge variant="secondary" className="shrink-0 capitalize">{q.status}</Badge>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (
@@ -396,6 +428,30 @@ function BatchDetail() {
           <DialogFooter>
             <Button onClick={handleWeekend} disabled={weekendGen} className="bg-gradient-primary hover:opacity-90">
               {weekendGen ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</> : <><Sparkles className="h-4 w-4" /> Generate test</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!quizToDelete} onOpenChange={(o) => !o && setQuizToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" /> Delete Quiz
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will permanently delete the quiz and all its questions and submissions. This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setQuizToDelete(null)} disabled={deleting}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => quizToDelete && handleDelete(quizToDelete)}
+              disabled={deleting}
+            >
+              {deleting ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</> : <><Trash2 className="h-4 w-4" /> Delete</>}
             </Button>
           </DialogFooter>
         </DialogContent>

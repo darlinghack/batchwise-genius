@@ -171,6 +171,23 @@ export const submitQuiz = createServerFn({ method: "POST" })
     };
   });
 
+export const deleteQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ quizId: z.string().uuid() }).parse(d))
+  .handler(async ({ data }) => {
+    const { data: quiz } = await supabaseAdmin
+      .from("quizzes")
+      .select("id, trainer_id")
+      .eq("id", data.quizId)
+      .maybeSingle();
+    if (!quiz) throw new Error("Quiz not found.");
+
+    await supabaseAdmin.from("submissions").delete().eq("quiz_id", data.quizId);
+    await supabaseAdmin.from("questions").delete().eq("quiz_id", data.quizId);
+    await supabaseAdmin.from("quizzes").delete().eq("id", data.quizId);
+    return { success: true };
+  });
+
 // ---- Trainer AI insight ----
 export const getBatchInsight = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
