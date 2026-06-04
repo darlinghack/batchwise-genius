@@ -330,13 +330,15 @@ function BatchDetail() {
         ) : batchQuizzes && batchQuizzes.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {batchQuizzes.map((q) => (
-              <Link
+              <div
                 key={q.id}
-                to="/dashboard/quiz/$quizId"
-                params={{ quizId: q.id }}
-                className="flex items-start justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/50"
+                className="group flex items-start justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary/50"
               >
-                <div className="min-w-0">
+                <Link
+                  to="/dashboard/quiz/$quizId"
+                  params={{ quizId: q.id }}
+                  className="flex-1 min-w-0"
+                >
                   <div className="flex items-center gap-2">
                     <FileQuestion className="h-4 w-4 shrink-0 text-primary" />
                     <p className="truncate font-medium">{q.title}</p>
@@ -346,9 +348,19 @@ function BatchDetail() {
                     <span>{q.num_questions} Qs</span>
                     <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {q.duration_minutes}m</span>
                   </div>
+                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant="secondary" className="capitalize">{q.status}</Badge>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setQuizToDelete(q.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Badge variant="secondary" className="shrink-0 capitalize">{q.status}</Badge>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (
