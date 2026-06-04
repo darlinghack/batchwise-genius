@@ -15,6 +15,8 @@ import {
   BarChart3,
   FileQuestion,
   Clock,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
