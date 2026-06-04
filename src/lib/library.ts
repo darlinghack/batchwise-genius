@@ -22,18 +22,6 @@ function toTemplateRows(rows: QuestionRow[], templateId: string) {
   }));
 }
 
-function toQuizRows(rows: QuestionRow[], quizId: string) {
-  return rows.map((q, i) => ({
-    quiz_id: quizId,
-    question_text: q.question_text,
-    options: q.options as never,
-    correct_index: q.correct_index,
-    explanation: q.explanation,
-    difficulty: q.difficulty,
-    position: i,
-  }));
-}
-
 /** Save an existing quiz (and its question set) as a reusable template. */
 export async function saveQuizAsTemplate(quizId: string, trainerId: string): Promise<string> {
   const { data: quiz, error: qe } = await supabase
