@@ -192,6 +192,20 @@ function BatchDetail() {
     }
   }
 
+  async function handleDelete(quizId: string) {
+    setDeleting(true);
+    try {
+      await delQuiz({ data: { quizId } });
+      toast.success("Quiz deleted");
+      qc.invalidateQueries({ queryKey: ["batch-quizzes", batchId] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+      setQuizToDelete(null);
+    }
+  }
+
   async function handleWeekend() {
     const chosen = (topics ?? []).filter((t) => selected.includes(t.id));
     if (chosen.length < 2) return toast.error("Select at least 2 topics.");
