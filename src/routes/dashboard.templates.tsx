@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BookMarked, Loader2, Copy, Trash2, Clock, Library } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { cloneTemplateToBatch } from "@/lib/library";
+import { cloneTemplateToBatch } from "@/lib/library.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ function TemplatesPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const clone = useServerFn(cloneTemplateToBatch);
   const [cloneTarget, setCloneTarget] = useState<Template | null>(null);
   const [batchId, setBatchId] = useState("");
   const [title, setTitle] = useState("");
@@ -80,10 +82,8 @@ function TemplatesPage() {
     if (!batchId) return toast.error("Choose a batch to clone into.");
     setCloning(true);
     try {
-      const quizId = await cloneTemplateToBatch(cloneTarget.id, {
-        trainerId: user.id,
-        batchId,
-        title,
+      const { quizId } = await clone({
+        data: { sourceId: cloneTarget.id, batchId, title },
       });
       toast.success("Cloned! A fresh, independent quiz was created.");
       setCloneTarget(null);
