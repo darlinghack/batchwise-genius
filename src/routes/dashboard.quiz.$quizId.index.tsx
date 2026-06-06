@@ -15,11 +15,9 @@ import {
   QrCode,
   Save,
   BarChart3,
-  BookMarked,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { saveQuizAsTemplate } from "@/lib/library";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,9 +46,9 @@ function QuizEditor() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [questions, setQuestions] = useState<EditQuestion[]>([]);
+  const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const { data: quiz, isLoading } = useQuery({
     queryKey: ["quiz", quizId],
@@ -86,6 +84,10 @@ function QuizEditor() {
     }
   }, [loadedQuestions]);
 
+  useEffect(() => {
+    if (quiz?.title) setTitle(quiz.title);
+  }, [quiz?.title]);
+
   const shareUrl =
     typeof window !== "undefined" && quiz ? `${window.location.origin}/quiz/${quiz.share_code}` : "";
 
@@ -112,6 +114,9 @@ function QuizEditor() {
   async function saveAll() {
     setSaving(true);
     try {
+      if (title.trim() && title.trim() !== quiz?.title) {
+        await supabase.from("quizzes").update({ title: title.trim() }).eq("id", quizId);
+      }
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
         if (q.isNew) {
@@ -141,6 +146,7 @@ function QuizEditor() {
       await supabase.from("quizzes").update({ num_questions: questions.length }).eq("id", quizId);
       toast.success("Saved!");
       qc.invalidateQueries({ queryKey: ["quiz-questions", quizId] });
+      qc.invalidateQueries({ queryKey: ["quiz", quizId] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -157,21 +163,6 @@ function QuizEditor() {
     toast.success(status === "published" ? "Quiz published!" : status === "closed" ? "Quiz closed." : "Reverted to draft.");
     qc.invalidateQueries({ queryKey: ["quiz", quizId] });
     qc.invalidateQueries({ queryKey: ["quizzes-list"] });
-  }
-
-  async function handleSaveTemplate() {
-    if (!user) return;
-    setSavingTemplate(true);
-    try {
-      await saveAll();
-      await saveQuizAsTemplate(quizId, user.id);
-      toast.success("Saved to Template Library!");
-      navigate({ to: "/dashboard/templates" });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save template");
-    } finally {
-      setSavingTemplate(false);
-    }
   }
 
   if (isLoading || !quiz) {
