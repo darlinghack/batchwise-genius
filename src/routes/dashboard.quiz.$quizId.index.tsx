@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +17,6 @@ import {
   BarChart3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,8 +42,6 @@ interface EditQuestion {
 function QuizEditor() {
   const { quizId } = Route.useParams();
   const qc = useQueryClient();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [questions, setQuestions] = useState<EditQuestion[]>([]);
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
