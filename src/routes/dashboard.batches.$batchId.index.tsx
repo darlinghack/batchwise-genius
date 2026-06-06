@@ -173,10 +173,15 @@ function BatchDetail() {
     setGenerating(true);
     try {
       const { questions } = await generate({
-        data: { topicName: genTopic.title, difficulty, count },
+        data: {
+          topicName: genTopic.title,
+          difficulty,
+          count,
+          instructions: instructions.trim() || undefined,
+        },
       });
       const quizId = await createQuizFromQuestions({
-        title: genTopic.title,
+        title: quizName.trim() || genTopic.title,
         topicName: genTopic.title,
         topicId: genTopic.id,
         type: "daily",
