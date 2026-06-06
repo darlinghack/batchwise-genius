@@ -17,6 +17,7 @@ const GenerateInput = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]),
   count: z.number().int().min(1).max(30),
   topics: z.array(z.string().min(1).max(200)).max(20).optional(),
+  instructions: z.string().max(2000).optional(),
 });
 
 export const generateQuizQuestions = createServerFn({ method: "POST" })
@@ -27,13 +28,17 @@ export const generateQuizQuestions = createServerFn({ method: "POST" })
       ? `covering these topics in a balanced way: ${data.topics.join(", ")}`
       : `on the topic "${data.topicName}"`;
 
+    const extra = data.instructions?.trim()
+      ? `\nIMPORTANT — follow these additional instructions from the trainer closely (they may specify exact subtopics, sample questions, focus areas, or style). If they include specific questions, base the quiz on them: """${data.instructions.trim()}"""`
+      : "";
+
     const system =
       "You are an expert technical trainer creating multiple-choice quiz questions for internship and training programs. " +
       "Always respond with strict JSON only.";
     const user = `Create exactly ${data.count} ${data.difficulty} multiple-choice questions ${scope}.
 Return JSON shaped exactly as:
 {"questions":[{"question_text":"...","options":["A","B","C","D"],"correct_index":0,"explanation":"why this is correct","difficulty":"${data.difficulty}"}]}
-Rules: exactly 4 options each; correct_index is 0-3; explanation is 1-2 sentences; questions must be accurate and unambiguous; avoid duplicates.`;
+Rules: exactly 4 options each; correct_index is 0-3; explanation is 1-2 sentences; questions must be accurate and unambiguous; avoid duplicates.${extra}`;
 
     const raw = (await chatJSON({ system, user })) as { questions?: GeneratedQuestion[] };
     const questions = (raw.questions ?? [])
