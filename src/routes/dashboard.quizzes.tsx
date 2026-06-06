@@ -48,11 +48,13 @@ function QuizzesPage() {
   const [cloning, setCloning] = useState(false);
 
   const { data: quizzes, isLoading } = useQuery({
-    queryKey: ["quizzes-list"],
+    queryKey: ["quizzes-list", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
         .from("quizzes")
         .select("id, title, type, difficulty, status, num_questions, duration_minutes, created_at, submissions(count)")
+        .eq("trainer_id", user!.id)
         .order("created_at", { ascending: false });
       return data ?? [];
     },

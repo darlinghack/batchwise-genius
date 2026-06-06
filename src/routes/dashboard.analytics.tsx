@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { Sparkles, Loader2, Download, Trophy, AlertTriangle, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { getBatchInsight } from "@/lib/quiz.functions";
 import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui/card";
@@ -30,15 +31,17 @@ export const Route = createFileRoute("/dashboard/analytics")({
 });
 
 function AnalyticsPage() {
+  const { user } = useAuth();
   const insightFn = useServerFn(getBatchInsight);
   const [insight, setInsight] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["analytics"],
+    queryKey: ["analytics", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const [quizzes, submissions] = await Promise.all([
-        supabase.from("quizzes").select("id, title, topic_name"),
+        supabase.from("quizzes").select("id, title, topic_name").eq("trainer_id", user!.id),
         supabase.from("submissions").select("student_name, student_email, score, total, percentage, quiz_id, points"),
       ]);
       return { quizzes: quizzes.data ?? [], submissions: submissions.data ?? [] };
