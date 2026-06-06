@@ -18,7 +18,6 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as QuizShareCodeRouteImport } from './routes/quiz.$shareCode'
-import { Route as DashboardTemplatesRouteImport } from './routes/dashboard.templates'
 import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
@@ -75,11 +74,6 @@ const QuizShareCodeRoute = QuizShareCodeRouteImport.update({
   id: '/quiz/$shareCode',
   path: '/quiz/$shareCode',
   getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardTemplatesRoute = DashboardTemplatesRouteImport.update({
-  id: '/templates',
-  path: '/templates',
-  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardQuizzesRoute = DashboardQuizzesRouteImport.update({
   id: '/quizzes',
@@ -152,7 +146,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
-  '/dashboard/templates': typeof DashboardTemplatesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRouteWithChildren
@@ -174,7 +167,6 @@ export interface FileRoutesByTo {
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
-  '/dashboard/templates': typeof DashboardTemplatesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/batches': typeof DashboardBatchesIndexRoute
@@ -196,7 +188,6 @@ export interface FileRoutesById {
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
-  '/dashboard/templates': typeof DashboardTemplatesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/batches/$batchId': typeof DashboardBatchesBatchIdRouteWithChildren
@@ -221,7 +212,6 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
-    | '/dashboard/templates'
     | '/quiz/$shareCode'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
@@ -243,7 +233,6 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
-    | '/dashboard/templates'
     | '/quiz/$shareCode'
     | '/dashboard'
     | '/dashboard/batches'
@@ -264,7 +253,6 @@ export interface FileRouteTypes {
     | '/dashboard/analytics'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
-    | '/dashboard/templates'
     | '/quiz/$shareCode'
     | '/dashboard/'
     | '/dashboard/batches/$batchId'
@@ -352,13 +340,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/quiz/$shareCode'
       preLoaderRoute: typeof QuizShareCodeRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/templates': {
-      id: '/dashboard/templates'
-      path: '/templates'
-      fullPath: '/dashboard/templates'
-      preLoaderRoute: typeof DashboardTemplatesRouteImport
-      parentRoute: typeof DashboardRoute
     }
     '/dashboard/quizzes': {
       id: '/dashboard/quizzes'
@@ -476,7 +457,6 @@ interface DashboardRouteChildren {
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardQuizzesRoute: typeof DashboardQuizzesRoute
-  DashboardTemplatesRoute: typeof DashboardTemplatesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardBatchesBatchIdRoute: typeof DashboardBatchesBatchIdRouteWithChildren
   DashboardQuizQuizIdRoute: typeof DashboardQuizQuizIdRouteWithChildren
@@ -487,7 +467,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAnalyticsRoute: DashboardAnalyticsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardQuizzesRoute: DashboardQuizzesRoute,
-  DashboardTemplatesRoute: DashboardTemplatesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardBatchesBatchIdRoute: DashboardBatchesBatchIdRouteWithChildren,
   DashboardQuizQuizIdRoute: DashboardQuizQuizIdRouteWithChildren,
@@ -511,13 +490,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

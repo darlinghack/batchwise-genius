@@ -24,6 +24,7 @@ import { generateQuizQuestions, deleteQuiz } from "@/lib/quiz.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,6 +66,8 @@ function BatchDetail() {
   const [genTopic, setGenTopic] = useState<{ id: string; title: string } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [count, setCount] = useState(10);
+  const [quizName, setQuizName] = useState("");
+  const [instructions, setInstructions] = useState("");
   const [generating, setGenerating] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [weekendOpen, setWeekendOpen] = useState(false);
@@ -171,10 +174,15 @@ function BatchDetail() {
     setGenerating(true);
     try {
       const { questions } = await generate({
-        data: { topicName: genTopic.title, difficulty, count },
+        data: {
+          topicName: genTopic.title,
+          difficulty,
+          count,
+          instructions: instructions.trim() || undefined,
+        },
       });
       const quizId = await createQuizFromQuestions({
-        title: genTopic.title,
+        title: quizName.trim() || genTopic.title,
         topicName: genTopic.title,
         topicId: genTopic.id,
         type: "daily",
@@ -296,7 +304,7 @@ function BatchDetail() {
                       <p className="text-xs font-medium text-muted-foreground">Day {t.day_number}</p>
                       <p className="font-medium">{t.title}</p>
                     </div>
-                    <Button size="sm" onClick={() => { setGenTopic({ id: t.id, title: t.title }); setCount(10); setDifficulty("medium"); }} className="bg-gradient-primary hover:opacity-90">
+                    <Button size="sm" onClick={() => { setGenTopic({ id: t.id, title: t.title }); setQuizName(t.title); setInstructions(""); setCount(10); setDifficulty("medium"); }} className="bg-gradient-primary hover:opacity-90">
                       <Sparkles className="h-3.5 w-3.5" /> Generate Quiz
                     </Button>
                   </div>
@@ -364,7 +372,7 @@ function BatchDetail() {
             ))}
           </div>
         ) : (
-          <p className="py-8 text-center text-sm text-muted-foreground">No quizzes yet. Generate one from a topic above or clone a template into this batch.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No quizzes yet. Generate one from a topic above to get started.</p>
         )}
       </Card>
 
@@ -378,6 +386,10 @@ function BatchDetail() {
             <div className="space-y-2">
               <Label>Topic</Label>
               <Input value={genTopic?.title ?? ""} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>Quiz name</Label>
+              <Input value={quizName} onChange={(e) => setQuizName(e.target.value)} placeholder="Quiz name" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -395,6 +407,15 @@ function BatchDetail() {
                 <Label>Questions</Label>
                 <Input type="number" min={1} max={30} value={count} onChange={(e) => setCount(Math.min(30, Math.max(1, Number(e.target.value) || 1)))} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Additional instructions <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="Add specific subtopics, sample questions, focus areas, or any context for the AI. Leave empty to generate from the topic alone."
+                className="min-h-[90px]"
+              />
             </div>
           </div>
           <DialogFooter>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -15,11 +15,8 @@ import {
   QrCode,
   Save,
   BarChart3,
-  BookMarked,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { saveQuizAsTemplate } from "@/lib/library";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,12 +42,10 @@ interface EditQuestion {
 function QuizEditor() {
   const { quizId } = Route.useParams();
   const qc = useQueryClient();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [questions, setQuestions] = useState<EditQuestion[]>([]);
+  const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const { data: quiz, isLoading } = useQuery({
     queryKey: ["quiz", quizId],
@@ -86,6 +81,10 @@ function QuizEditor() {
     }
   }, [loadedQuestions]);
 
+  useEffect(() => {
+    if (quiz?.title) setTitle(quiz.title);
+  }, [quiz?.title]);
+
   const shareUrl =
     typeof window !== "undefined" && quiz ? `${window.location.origin}/quiz/${quiz.share_code}` : "";
 
@@ -112,6 +111,9 @@ function QuizEditor() {
   async function saveAll() {
     setSaving(true);
     try {
+      if (title.trim() && title.trim() !== quiz?.title) {
+        await supabase.from("quizzes").update({ title: title.trim() }).eq("id", quizId);
+      }
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
         if (q.isNew) {
@@ -141,6 +143,7 @@ function QuizEditor() {
       await supabase.from("quizzes").update({ num_questions: questions.length }).eq("id", quizId);
       toast.success("Saved!");
       qc.invalidateQueries({ queryKey: ["quiz-questions", quizId] });
+      qc.invalidateQueries({ queryKey: ["quiz", quizId] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -159,21 +162,6 @@ function QuizEditor() {
     qc.invalidateQueries({ queryKey: ["quizzes-list"] });
   }
 
-  async function handleSaveTemplate() {
-    if (!user) return;
-    setSavingTemplate(true);
-    try {
-      await saveAll();
-      await saveQuizAsTemplate(quizId, user.id);
-      toast.success("Saved to Template Library!");
-      navigate({ to: "/dashboard/templates" });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save template");
-    } finally {
-      setSavingTemplate(false);
-    }
-  }
-
   if (isLoading || !quiz) {
     return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
@@ -185,19 +173,32 @@ function QuizEditor() {
       </Button>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
-            <Badge variant="secondary" className={cn(quiz.status === "published" && "bg-success/15 text-success", quiz.status === "closed" && "bg-destructive/10 text-destructive")}>{quiz.status}</Badge>
-          </div>
+        <div className="min-w-0 flex-1">
+          {quiz.status === "draft" ? (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Quiz name</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Quiz name"
+                  className="max-w-md text-lg font-semibold"
+                />
+                <Badge variant="secondary">{quiz.status}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Edit the name above, then click Save or Publish.</p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
+              <Badge variant="secondary" className={cn(quiz.status === "published" && "bg-success/15 text-success", quiz.status === "closed" && "bg-destructive/10 text-destructive")}>{quiz.status}</Badge>
+            </div>
+          )}
           <p className="mt-1 text-sm capitalize text-muted-foreground">{quiz.type} · {quiz.difficulty} · {quiz.duration_minutes} min · {questions.length} questions</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
-          </Button>
-          <Button variant="outline" onClick={handleSaveTemplate} disabled={savingTemplate}>
-            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />} Save as template
           </Button>
           {quiz.status !== "draft" && (
             <Button variant="outline" asChild>

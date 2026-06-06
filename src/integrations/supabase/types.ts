@@ -124,56 +124,6 @@ export type Database = {
           },
         ]
       }
-      quiz_templates: {
-        Row: {
-          created_at: string
-          difficulty: Database["public"]["Enums"]["quiz_difficulty"]
-          duration_minutes: number
-          id: string
-          num_questions: number
-          source_quiz_id: string | null
-          title: string
-          topic_name: string
-          trainer_id: string
-          type: Database["public"]["Enums"]["quiz_type"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
-          duration_minutes?: number
-          id?: string
-          num_questions?: number
-          source_quiz_id?: string | null
-          title: string
-          topic_name?: string
-          trainer_id: string
-          type?: Database["public"]["Enums"]["quiz_type"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
-          duration_minutes?: number
-          id?: string
-          num_questions?: number
-          source_quiz_id?: string | null
-          title?: string
-          topic_name?: string
-          trainer_id?: string
-          type?: Database["public"]["Enums"]["quiz_type"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "quiz_templates_source_quiz_id_fkey"
-            columns: ["source_quiz_id"]
-            isOneToOne: false
-            referencedRelation: "quizzes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       quizzes: {
         Row: {
           batch_id: string | null
@@ -184,7 +134,6 @@ export type Database = {
           id: string
           num_questions: number
           share_code: string
-          source_template_id: string | null
           status: Database["public"]["Enums"]["quiz_status"]
           title: string
           topic_id: string | null
@@ -202,7 +151,6 @@ export type Database = {
           id?: string
           num_questions?: number
           share_code?: string
-          source_template_id?: string | null
           status?: Database["public"]["Enums"]["quiz_status"]
           title: string
           topic_id?: string | null
@@ -220,7 +168,6 @@ export type Database = {
           id?: string
           num_questions?: number
           share_code?: string
-          source_template_id?: string | null
           status?: Database["public"]["Enums"]["quiz_status"]
           title?: string
           topic_id?: string | null
@@ -242,13 +189,6 @@ export type Database = {
             columns: ["cloned_from_quiz_id"]
             isOneToOne: false
             referencedRelation: "quizzes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quizzes_source_template_id_fkey"
-            columns: ["source_template_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_templates"
             referencedColumns: ["id"]
           },
           {
@@ -312,50 +252,6 @@ export type Database = {
             columns: ["quiz_id"]
             isOneToOne: false
             referencedRelation: "quizzes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      template_questions: {
-        Row: {
-          correct_index: number
-          created_at: string
-          difficulty: Database["public"]["Enums"]["quiz_difficulty"]
-          explanation: string
-          id: string
-          options: Json
-          position: number
-          question_text: string
-          template_id: string
-        }
-        Insert: {
-          correct_index?: number
-          created_at?: string
-          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
-          explanation?: string
-          id?: string
-          options?: Json
-          position?: number
-          question_text: string
-          template_id: string
-        }
-        Update: {
-          correct_index?: number
-          created_at?: string
-          difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
-          explanation?: string
-          id?: string
-          options?: Json
-          position?: number
-          question_text?: string
-          template_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "template_questions_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "quiz_templates"
             referencedColumns: ["id"]
           },
         ]
