@@ -303,7 +303,7 @@ function BatchDetail() {
                       <p className="text-xs font-medium text-muted-foreground">Day {t.day_number}</p>
                       <p className="font-medium">{t.title}</p>
                     </div>
-                    <Button size="sm" onClick={() => { setGenTopic({ id: t.id, title: t.title }); setCount(10); setDifficulty("medium"); }} className="bg-gradient-primary hover:opacity-90">
+                    <Button size="sm" onClick={() => { setGenTopic({ id: t.id, title: t.title }); setQuizName(t.title); setInstructions(""); setCount(10); setDifficulty("medium"); }} className="bg-gradient-primary hover:opacity-90">
                       <Sparkles className="h-3.5 w-3.5" /> Generate Quiz
                     </Button>
                   </div>
