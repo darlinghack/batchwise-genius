@@ -65,6 +65,8 @@ function BatchDetail() {
   const [genTopic, setGenTopic] = useState<{ id: string; title: string } | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [count, setCount] = useState(10);
+  const [quizName, setQuizName] = useState("");
+  const [instructions, setInstructions] = useState("");
   const [generating, setGenerating] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [weekendOpen, setWeekendOpen] = useState(false);
