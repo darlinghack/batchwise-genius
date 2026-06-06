@@ -40,6 +40,7 @@ function isToday(d: string) {
 }
 
 function DashboardHome() {
+  const { user } = useAuth();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["dashboard-overview", user?.id],
     enabled: !!user,
