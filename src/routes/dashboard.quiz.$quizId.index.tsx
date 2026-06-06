@@ -176,19 +176,32 @@ function QuizEditor() {
       </Button>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
-            <Badge variant="secondary" className={cn(quiz.status === "published" && "bg-success/15 text-success", quiz.status === "closed" && "bg-destructive/10 text-destructive")}>{quiz.status}</Badge>
-          </div>
+        <div className="min-w-0 flex-1">
+          {quiz.status === "draft" ? (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Quiz name</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Quiz name"
+                  className="max-w-md text-lg font-semibold"
+                />
+                <Badge variant="secondary">{quiz.status}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">Edit the name above, then click Save or Publish.</p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
+              <Badge variant="secondary" className={cn(quiz.status === "published" && "bg-success/15 text-success", quiz.status === "closed" && "bg-destructive/10 text-destructive")}>{quiz.status}</Badge>
+            </div>
+          )}
           <p className="mt-1 text-sm capitalize text-muted-foreground">{quiz.type} · {quiz.difficulty} · {quiz.duration_minutes} min · {questions.length} questions</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
-          </Button>
-          <Button variant="outline" onClick={handleSaveTemplate} disabled={savingTemplate}>
-            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookMarked className="h-4 w-4" />} Save as template
           </Button>
           {quiz.status !== "draft" && (
             <Button variant="outline" asChild>
