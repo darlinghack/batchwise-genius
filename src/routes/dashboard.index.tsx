@@ -41,11 +41,12 @@ function isToday(d: string) {
 
 function DashboardHome() {
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["dashboard-overview"],
+    queryKey: ["dashboard-overview", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       const [batches, quizzes, submissions] = await Promise.all([
         supabase.from("batches").select("id, name, course_name, status, created_at"),
-        supabase.from("quizzes").select("id, title, status, type, created_at"),
+        supabase.from("quizzes").select("id, title, status, type, created_at").eq("trainer_id", user!.id),
         supabase.from("submissions").select("id, student_email, score, total, percentage, submitted_at, quiz_id"),
       ]);
       return {
