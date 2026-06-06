@@ -372,7 +372,7 @@ function BatchDetail() {
             ))}
           </div>
         ) : (
-          <p className="py-8 text-center text-sm text-muted-foreground">No quizzes yet. Generate one from a topic above or clone a template into this batch.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No quizzes yet. Generate one from a topic above to get started.</p>
         )}
       </Card>
 
