@@ -386,6 +386,10 @@ function BatchDetail() {
               <Label>Topic</Label>
               <Input value={genTopic?.title ?? ""} disabled />
             </div>
+            <div className="space-y-2">
+              <Label>Quiz name</Label>
+              <Input value={quizName} onChange={(e) => setQuizName(e.target.value)} placeholder="Quiz name" />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Difficulty</Label>
@@ -402,6 +406,15 @@ function BatchDetail() {
                 <Label>Questions</Label>
                 <Input type="number" min={1} max={30} value={count} onChange={(e) => setCount(Math.min(30, Math.max(1, Number(e.target.value) || 1)))} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Additional instructions <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="Add specific subtopics, sample questions, focus areas, or any context for the AI. Leave empty to generate from the topic alone."
+                className="min-h-[90px]"
+              />
             </div>
           </div>
           <DialogFooter>
