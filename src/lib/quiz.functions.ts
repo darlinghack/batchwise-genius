@@ -186,13 +186,23 @@ export const submitQuiz = createServerFn({ method: "POST" })
 export const deleteQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ quizId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
       .select("id, trainer_id")
       .eq("id", data.quizId)
       .maybeSingle();
     if (!quiz) throw new Error("Quiz not found.");
+
+    // Authorization: only the owning trainer (or a super_admin) may delete.
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    const isSuperAdmin = (roles ?? []).some((r) => r.role === "super_admin");
+    if (quiz.trainer_id !== context.userId && !isSuperAdmin) {
+      throw new Error("You do not have permission to delete this quiz.");
+    }
 
     await supabaseAdmin.from("submissions").delete().eq("quiz_id", data.quizId);
     await supabaseAdmin.from("questions").delete().eq("quiz_id", data.quizId);
