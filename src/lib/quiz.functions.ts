@@ -75,9 +75,16 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
       .eq("quiz_id", quiz.id)
       .order("position", { ascending: true });
 
+    // Jumble question order so each student sees a different sequence.
+    const shuffled = [...(questions ?? [])];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
     return {
       quiz,
-      questions: (questions ?? []).map((q) => ({
+      questions: shuffled.map((q) => ({
         id: q.id,
         question_text: q.question_text,
         options: q.options as string[],
