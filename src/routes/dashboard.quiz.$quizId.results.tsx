@@ -157,6 +157,17 @@ function QuizResults() {
   });
   const hardest = [...questionStats].filter((q) => q.answered > 0).sort((a, b) => a.accuracy - b.accuracy);
 
+  // feedback stats
+  const rated = subs.filter((s) => typeof s.feedback_rating === "number" && s.feedback_rating! > 0);
+  const avgRating = rated.length
+    ? Math.round((rated.reduce((a, s) => a + (s.feedback_rating ?? 0), 0) / rated.length) * 10) / 10
+    : 0;
+  const comments = subs.filter((s) => (s.feedback_text ?? "").trim().length > 0);
+  const ratingDist = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: rated.filter((s) => s.feedback_rating === star).length,
+  }));
+
   const barColor = (v: number) =>
     v >= 70 ? "oklch(0.62 0.16 155)" : v >= 40 ? "oklch(0.7 0.16 70)" : "oklch(0.58 0.23 27)";
 
