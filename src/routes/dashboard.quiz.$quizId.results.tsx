@@ -24,6 +24,8 @@ import {
   Send,
   AlertTriangle,
   CheckCircle2,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
@@ -47,6 +49,8 @@ interface Sub {
   percentage: number;
   time_taken_seconds: number;
   answers: { questionId: string; selected: number }[];
+  feedback_rating: number | null;
+  feedback_text: string;
 }
 
 interface Q {
@@ -80,7 +84,7 @@ function QuizResults() {
       const [subs, questions] = await Promise.all([
         supabase
           .from("submissions")
-          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers")
+          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers, feedback_rating, feedback_text")
           .eq("quiz_id", quizId),
         supabase
           .from("questions")
