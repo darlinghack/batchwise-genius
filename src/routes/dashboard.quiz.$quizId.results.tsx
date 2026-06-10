@@ -24,6 +24,8 @@ import {
   Send,
   AlertTriangle,
   CheckCircle2,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
@@ -47,6 +49,8 @@ interface Sub {
   percentage: number;
   time_taken_seconds: number;
   answers: { questionId: string; selected: number }[];
+  feedback_rating: number | null;
+  feedback_text: string;
 }
 
 interface Q {
@@ -80,7 +84,7 @@ function QuizResults() {
       const [subs, questions] = await Promise.all([
         supabase
           .from("submissions")
-          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers")
+          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers, feedback_rating, feedback_text")
           .eq("quiz_id", quizId),
         supabase
           .from("questions")
@@ -152,6 +156,17 @@ function QuizResults() {
     return { idx: i + 1, question_text: q.question_text, accuracy, correct, answered };
   });
   const hardest = [...questionStats].filter((q) => q.answered > 0).sort((a, b) => a.accuracy - b.accuracy);
+
+  // feedback stats
+  const rated = subs.filter((s) => typeof s.feedback_rating === "number" && s.feedback_rating! > 0);
+  const avgRating = rated.length
+    ? Math.round((rated.reduce((a, s) => a + (s.feedback_rating ?? 0), 0) / rated.length) * 10) / 10
+    : 0;
+  const comments = subs.filter((s) => (s.feedback_text ?? "").trim().length > 0);
+  const ratingDist = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: rated.filter((s) => s.feedback_rating === star).length,
+  }));
 
   const barColor = (v: number) =>
     v >= 70 ? "oklch(0.62 0.16 155)" : v >= 40 ? "oklch(0.7 0.16 70)" : "oklch(0.58 0.23 27)";
@@ -303,6 +318,63 @@ function QuizResults() {
                 </span>
               </div>
             ))}
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-semibold"><Star className="h-4 w-4 text-warning" /> Student Feedback</h2>
+          {rated.length > 0 && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <Star className="h-4 w-4 fill-warning text-warning" />
+              <span className="font-bold">{avgRating}</span>
+              <span className="text-muted-foreground">/ 5 · {rated.length} rating{rated.length > 1 ? "s" : ""}</span>
+            </div>
+          )}
+        </div>
+
+        {rated.length === 0 && comments.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No feedback submitted yet.</p>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              {ratingDist.map((r) => {
+                const pct = rated.length ? Math.round((r.count / rated.length) * 100) : 0;
+                return (
+                  <div key={r.star} className="flex items-center gap-3">
+                    <span className="flex w-10 shrink-0 items-center gap-0.5 text-xs font-semibold text-muted-foreground">{r.star} <Star className="h-3 w-3 fill-warning text-warning" /></span>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-warning" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-8 shrink-0 text-right text-xs text-muted-foreground">{r.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3">
+              <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"><MessageSquare className="h-4 w-4" /> Comments ({comments.length})</p>
+              {comments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No written comments yet.</p>
+              ) : (
+                <div className="max-h-64 space-y-3 overflow-y-auto">
+                  {comments.map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">{s.student_name}</p>
+                        {typeof s.feedback_rating === "number" && s.feedback_rating > 0 && (
+                          <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-warning">
+                            {s.feedback_rating} <Star className="h-3 w-3 fill-warning text-warning" />
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{s.feedback_text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </Card>
