@@ -321,6 +321,63 @@ function QuizResults() {
           </div>
         )}
       </Card>
+
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-semibold"><Star className="h-4 w-4 text-warning" /> Student Feedback</h2>
+          {rated.length > 0 && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <Star className="h-4 w-4 fill-warning text-warning" />
+              <span className="font-bold">{avgRating}</span>
+              <span className="text-muted-foreground">/ 5 · {rated.length} rating{rated.length > 1 ? "s" : ""}</span>
+            </div>
+          )}
+        </div>
+
+        {rated.length === 0 && comments.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No feedback submitted yet.</p>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              {ratingDist.map((r) => {
+                const pct = rated.length ? Math.round((r.count / rated.length) * 100) : 0;
+                return (
+                  <div key={r.star} className="flex items-center gap-3">
+                    <span className="flex w-10 shrink-0 items-center gap-0.5 text-xs font-semibold text-muted-foreground">{r.star} <Star className="h-3 w-3 fill-warning text-warning" /></span>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-warning" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-8 shrink-0 text-right text-xs text-muted-foreground">{r.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3">
+              <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"><MessageSquare className="h-4 w-4" /> Comments ({comments.length})</p>
+              {comments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No written comments yet.</p>
+              ) : (
+                <div className="max-h-64 space-y-3 overflow-y-auto">
+                  {comments.map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">{s.student_name}</p>
+                        {typeof s.feedback_rating === "number" && s.feedback_rating > 0 && (
+                          <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-warning">
+                            {s.feedback_rating} <Star className="h-3 w-3 fill-warning text-warning" />
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{s.feedback_text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
