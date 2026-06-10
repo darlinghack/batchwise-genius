@@ -210,12 +210,56 @@ function PublicQuiz() {
               {current < questions.length - 1 ? (
                 <Button onClick={() => setCurrent((c) => c + 1)} className="bg-gradient-primary hover:opacity-90">Next <ChevronRight className="h-4 w-4" /></Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit quiz
+                <Button onClick={() => setPhase("feedback")} className="bg-gradient-primary hover:opacity-90">
+                  <Trophy className="h-4 w-4" /> Finish quiz
                 </Button>
               )}
             </div>
           </div>
+        )}
+
+        {phase === "feedback" && (
+          <Card className="p-6 sm:p-8 animate-fade-in-up">
+            <h1 className="text-2xl font-bold tracking-tight">One last thing</h1>
+            <p className="mt-1 text-sm text-muted-foreground">How was your experience with this quiz? Your feedback helps us improve.</p>
+
+            <div className="mt-6">
+              <Label>Rate this quiz</Label>
+              <div className="mt-2 flex items-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setRating(n)}
+                    onMouseEnter={() => setHoverRating(n)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110"
+                    aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                  >
+                    <Star className={cn("h-8 w-8", (hoverRating || rating) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <Label>Comments (optional)</Label>
+              <Textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="What did you like or what could be better?"
+                rows={4}
+                maxLength={1000}
+              />
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <Button variant="ghost" onClick={handleSubmit} disabled={submitting}>Skip</Button>
+              <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit
+              </Button>
+            </div>
+          </Card>
         )}
 
         {phase === "result" && result && (
