@@ -204,6 +204,8 @@ export type Database = {
         Row: {
           answers: Json
           college_name: string
+          feedback_rating: number | null
+          feedback_text: string
           id: string
           percentage: number
           points: number
@@ -219,6 +221,8 @@ export type Database = {
         Insert: {
           answers?: Json
           college_name?: string
+          feedback_rating?: number | null
+          feedback_text?: string
           id?: string
           percentage?: number
           points?: number
@@ -234,6 +238,8 @@ export type Database = {
         Update: {
           answers?: Json
           college_name?: string
+          feedback_rating?: number | null
+          feedback_text?: string
           id?: string
           percentage?: number
           points?: number
