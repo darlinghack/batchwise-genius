@@ -13,6 +13,7 @@ import {
   XCircle,
   Sparkles,
   GraduationCap,
+  Star,
 } from "lucide-react";
 import { getPublicQuiz, submitQuiz } from "@/lib/quiz.functions";
 import { Card } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
@@ -40,13 +42,16 @@ function PublicQuiz() {
     queryFn: () => fetchQuiz({ data: { code: shareCode } }),
   });
 
-  const [phase, setPhase] = useState<"info" | "quiz" | "result">("info");
+  const [phase, setPhase] = useState<"info" | "quiz" | "feedback" | "result">("info");
   const [info, setInfo] = useState({ fullName: "", email: "", rollNumber: "", collegeName: "" });
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState("");
   const startRef = useRef<number>(0);
 
   const quiz = data?.quiz;
@@ -102,6 +107,8 @@ function PublicQuiz() {
           collegeName: info.collegeName.trim(),
           answers: payload,
           timeTakenSeconds: Math.round((Date.now() - startRef.current) / 1000),
+          feedbackRating: rating > 0 ? rating : undefined,
+          feedbackText: feedbackText.trim(),
         },
       });
       setResult(res);
