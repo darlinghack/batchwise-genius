@@ -21,6 +21,8 @@ import {
   TrendingUp,
   FileQuestion,
   ArrowRight,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
@@ -33,6 +35,29 @@ export const Route = createFileRoute("/dashboard/batches/$batchId/analytics")({
   head: () => ({ meta: [{ title: "Batch analytics — Datapro QuizHub" }] }),
   component: BatchAnalytics,
 });
+
+interface Feedback {
+  section: string | null;
+  faculty_clarity: number | null;
+  faculty_engagement: number | null;
+  faculty_expertise: number | null;
+  faculty_answering: number | null;
+  teaching_pace: string | null;
+  resources_usefulness: string | null;
+  task_completion: string | null;
+  quizzes_usefulness: string | null;
+  impact_clarity: number | null;
+  impact_relevance: number | null;
+  impact_skill: number | null;
+  impact_knowledge: number | null;
+  course_rating: number | null;
+  trainer_rating: number | null;
+  organization_rating: number | null;
+  satisfaction_rating: number | null;
+  suggestions: string | null;
+  student_name: string | null;
+  created_at: string;
+}
 
 function BatchAnalytics() {
   const { batchId } = Route.useParams();
@@ -51,20 +76,30 @@ function BatchAnalytics() {
         .order("created_at", { ascending: false });
       const quizIds = (quizzes ?? []).map((q) => q.id);
       let subs: { quiz_id: string; student_name: string; student_email: string; percentage: number }[] = [];
+      let feedback: Feedback[] = [];
       if (quizIds.length) {
         const { data: s } = await supabase
           .from("submissions")
           .select("quiz_id, student_name, student_email, percentage")
           .in("quiz_id", quizIds);
         subs = (s as typeof subs) ?? [];
+        const { data: f } = await supabase
+          .from("internship_feedback")
+          .select(
+            "section, faculty_clarity, faculty_engagement, faculty_expertise, faculty_answering, teaching_pace, resources_usefulness, task_completion, quizzes_usefulness, impact_clarity, impact_relevance, impact_skill, impact_knowledge, course_rating, trainer_rating, organization_rating, satisfaction_rating, suggestions, student_name, created_at",
+          )
+          .in("quiz_id", quizIds)
+          .order("created_at", { ascending: false });
+        feedback = (f as unknown as Feedback[]) ?? [];
       }
-      return { batch, quizzes: quizzes ?? [], subs };
+      return { batch, quizzes: quizzes ?? [], subs, feedback };
     },
   });
 
   const batch = data?.batch;
   const quizzes = data?.quizzes ?? [];
   const subs = data?.subs ?? [];
+  const feedback = data?.feedback ?? [];
   const attempts = subs.length;
   const avg = attempts ? Math.round(subs.reduce((a, s) => a + Number(s.percentage), 0) / attempts) : 0;
   const passed = subs.filter((s) => Number(s.percentage) >= 60).length;
