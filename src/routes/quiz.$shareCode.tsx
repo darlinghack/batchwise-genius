@@ -171,6 +171,19 @@ function PublicQuiz() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
+  // Overall internship feedback
+  const [section, setSection] = useState("");
+  const [faculty, setFaculty] = useState<Record<string, number>>({});
+  const [pace, setPace] = useState("");
+  const [resources, setResources] = useState("");
+  const [tasks, setTasks] = useState("");
+  const [quizUseful, setQuizUseful] = useState("");
+  const [impact, setImpact] = useState<Record<string, number>>({});
+  const [courseRating, setCourseRating] = useState(0);
+  const [trainerRating, setTrainerRating] = useState(0);
+  const [orgRating, setOrgRating] = useState(0);
+  const [satisfaction, setSatisfaction] = useState(0);
+  const [suggestions, setSuggestions] = useState("");
   const startRef = useRef<number>(0);
 
   const quiz = data?.quiz;
@@ -228,6 +241,26 @@ function PublicQuiz() {
           timeTakenSeconds: Math.round((Date.now() - startRef.current) / 1000),
           feedbackRating: rating > 0 ? rating : undefined,
           feedbackText: feedbackText.trim(),
+          internshipFeedback: {
+            section: section || undefined,
+            facultyClarity: faculty.clarity || undefined,
+            facultyEngagement: faculty.engagement || undefined,
+            facultyExpertise: faculty.expertise || undefined,
+            facultyAnswering: faculty.answering || undefined,
+            teachingPace: pace || undefined,
+            resourcesUsefulness: resources || undefined,
+            taskCompletion: tasks || undefined,
+            quizzesUsefulness: quizUseful || undefined,
+            impactClarity: impact.clarity || undefined,
+            impactRelevance: impact.relevance || undefined,
+            impactSkill: impact.skill || undefined,
+            impactKnowledge: impact.knowledge || undefined,
+            courseRating: courseRating || undefined,
+            trainerRating: trainerRating || undefined,
+            organizationRating: orgRating || undefined,
+            satisfactionRating: satisfaction || undefined,
+            suggestions: suggestions.trim() || undefined,
+          },
         },
       });
       setResult(res);
