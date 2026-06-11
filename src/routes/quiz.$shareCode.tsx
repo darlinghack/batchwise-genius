@@ -32,6 +32,125 @@ export const Route = createFileRoute("/quiz/$shareCode")({
 
 type Result = Awaited<ReturnType<typeof submitQuiz>>;
 
+// ---- Internship feedback option sets ----
+const SECTIONS = ["CSD", "CSM", "CSE"] as const;
+const GRID4 = [
+  { label: "Excellent", value: 4 },
+  { label: "Good", value: 3 },
+  { label: "Fair", value: 2 },
+  { label: "Poor", value: 1 },
+];
+const IMPACT4 = [
+  { label: "Very Helpful", value: 4 },
+  { label: "Helpful", value: 3 },
+  { label: "Slightly Helpful", value: 2 },
+  { label: "Not Helpful", value: 1 },
+];
+const PACE = ["Too Fast", "Just Right", "Too Slow"];
+const USEFUL = ["Very Useful", "Useful", "Slightly Useful", "Not Useful"];
+const TASKS = ["Yes, all of them", "Most of them", "Some of them", "No, very few/none"];
+const FACULTY_ROWS = [
+  { key: "clarity", label: "Clarity of concepts" },
+  { key: "engagement", label: "Engagement / interaction" },
+  { key: "expertise", label: "Expertise in topics" },
+  { key: "answering", label: "Answering questions effectively" },
+] as const;
+const IMPACT_ROWS = [
+  { key: "clarity", label: "Clarity of concepts" },
+  { key: "relevance", label: "Relevance to job / studies" },
+  { key: "skill", label: "Skill application" },
+  { key: "knowledge", label: "Overall knowledge improvement" },
+] as const;
+
+function ChoiceRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(value === opt ? "" : opt)}
+            className={cn(
+              "rounded-lg border px-3 py-1.5 text-sm transition-colors",
+              value === opt ? "border-primary bg-primary/5 font-medium text-primary" : "border-border hover:border-primary/40",
+            )}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GridScale({
+  title,
+  rows,
+  options,
+  values,
+  onChange,
+}: {
+  title: string;
+  rows: readonly { key: string; label: string }[];
+  options: { label: string; value: number }[];
+  values: Record<string, number>;
+  onChange: (key: string, value: number) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{title}</Label>
+      <div className="space-y-2">
+        {rows.map((row) => (
+          <div key={row.key} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm">{row.label}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onChange(row.key, values[row.key] === opt.value ? 0 : opt.value)}
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                    values[row.key] === opt.value ? "border-primary bg-primary/5 font-medium text-primary" : "border-border hover:border-primary/40",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StarRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChange(value === n ? 0 : n)}
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(0)}
+            className="transition-transform hover:scale-110"
+            aria-label={`${n} star${n > 1 ? "s" : ""}`}
+          >
+            <Star className={cn("h-6 w-6", (hover || value) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PublicQuiz() {
   const { shareCode } = Route.useParams();
   const fetchQuiz = useServerFn(getPublicQuiz);
@@ -52,6 +171,19 @@ function PublicQuiz() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
+  // Overall internship feedback
+  const [section, setSection] = useState("");
+  const [faculty, setFaculty] = useState<Record<string, number>>({});
+  const [pace, setPace] = useState("");
+  const [resources, setResources] = useState("");
+  const [tasks, setTasks] = useState("");
+  const [quizUseful, setQuizUseful] = useState("");
+  const [impact, setImpact] = useState<Record<string, number>>({});
+  const [courseRating, setCourseRating] = useState(0);
+  const [trainerRating, setTrainerRating] = useState(0);
+  const [orgRating, setOrgRating] = useState(0);
+  const [satisfaction, setSatisfaction] = useState(0);
+  const [suggestions, setSuggestions] = useState("");
   const startRef = useRef<number>(0);
 
   const quiz = data?.quiz;
@@ -109,6 +241,26 @@ function PublicQuiz() {
           timeTakenSeconds: Math.round((Date.now() - startRef.current) / 1000),
           feedbackRating: rating > 0 ? rating : undefined,
           feedbackText: feedbackText.trim(),
+          internshipFeedback: {
+            section: section || undefined,
+            facultyClarity: faculty.clarity || undefined,
+            facultyEngagement: faculty.engagement || undefined,
+            facultyExpertise: faculty.expertise || undefined,
+            facultyAnswering: faculty.answering || undefined,
+            teachingPace: pace || undefined,
+            resourcesUsefulness: resources || undefined,
+            taskCompletion: tasks || undefined,
+            quizzesUsefulness: quizUseful || undefined,
+            impactClarity: impact.clarity || undefined,
+            impactRelevance: impact.relevance || undefined,
+            impactSkill: impact.skill || undefined,
+            impactKnowledge: impact.knowledge || undefined,
+            courseRating: courseRating || undefined,
+            trainerRating: trainerRating || undefined,
+            organizationRating: orgRating || undefined,
+            satisfactionRating: satisfaction || undefined,
+            suggestions: suggestions.trim() || undefined,
+          },
         },
       });
       setResult(res);
@@ -220,40 +372,88 @@ function PublicQuiz() {
 
         {phase === "feedback" && (
           <Card className="p-6 sm:p-8 animate-fade-in-up">
-            <h1 className="text-2xl font-bold tracking-tight">One last thing</h1>
-            <p className="mt-1 text-sm text-muted-foreground">How was your experience with this quiz? Your feedback helps us improve.</p>
+            <h1 className="text-2xl font-bold tracking-tight">Internship Feedback</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your feedback on the overall internship helps us improve future sessions. All fields are optional — share what you can.
+            </p>
 
-            <div className="mt-6">
+            {/* Quick quiz rating */}
+            <div className="mt-6 rounded-xl border border-border p-4">
               <Label>Rate this quiz</Label>
               <div className="mt-2 flex items-center gap-1.5">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     type="button"
-                    onClick={() => setRating(n)}
+                    onClick={() => setRating(rating === n ? 0 : n)}
                     onMouseEnter={() => setHoverRating(n)}
                     onMouseLeave={() => setHoverRating(0)}
                     className="transition-transform hover:scale-110"
                     aria-label={`${n} star${n > 1 ? "s" : ""}`}
                   >
-                    <Star className={cn("h-8 w-8", (hoverRating || rating) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
+                    <Star className={cn("h-7 w-7", (hoverRating || rating) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
                   </button>
                 ))}
               </div>
+              <div className="mt-3 space-y-2">
+                <Label>Comments about this quiz</Label>
+                <Textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="What did you like or what could be better?"
+                  rows={3}
+                  maxLength={1000}
+                />
+              </div>
             </div>
 
-            <div className="mt-6 space-y-2">
-              <Label>Comments (optional)</Label>
-              <Textarea
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                placeholder="What did you like or what could be better?"
-                rows={4}
-                maxLength={1000}
+            <div className="my-6 border-t border-border" />
+            <h2 className="text-lg font-semibold">About the overall internship</h2>
+
+            <div className="mt-4 space-y-6">
+              <ChoiceRow label="Your section / branch" options={[...SECTIONS]} value={section} onChange={setSection} />
+
+              <GridScale
+                title="How would you rate the faculty's teaching quality?"
+                rows={FACULTY_ROWS}
+                options={GRID4}
+                values={faculty}
+                onChange={(k, v) => setFaculty((p) => ({ ...p, [k]: v }))}
               />
+
+              <ChoiceRow label="How was the pace of teaching?" options={PACE} value={pace} onChange={setPace} />
+              <ChoiceRow label="How useful were the study materials / resources?" options={USEFUL} value={resources} onChange={setResources} />
+              <ChoiceRow label="Were you able to complete the practical tasks and activities?" options={TASKS} value={tasks} onChange={setTasks} />
+              <ChoiceRow label="How useful were the daily quizzes?" options={USEFUL} value={quizUseful} onChange={setQuizUseful} />
+
+              <GridScale
+                title="How helpful were the sessions in improving your knowledge and skills?"
+                rows={IMPACT_ROWS}
+                options={IMPACT4}
+                values={impact}
+                onChange={(k, v) => setImpact((p) => ({ ...p, [k]: v }))}
+              />
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                <StarRow label="Overall course rating" value={courseRating} onChange={setCourseRating} />
+                <StarRow label="Overall trainer rating" value={trainerRating} onChange={setTrainerRating} />
+                <StarRow label="Organization & coordination" value={orgRating} onChange={setOrgRating} />
+                <StarRow label="Overall satisfaction" value={satisfaction} onChange={setSatisfaction} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Suggestions or improvements for the sessions / faculty</Label>
+                <Textarea
+                  value={suggestions}
+                  onChange={(e) => setSuggestions(e.target.value)}
+                  placeholder="What would make the internship better?"
+                  rows={4}
+                  maxLength={2000}
+                />
+              </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-2">
+            <div className="mt-8 flex items-center justify-end gap-2">
               <Button variant="ghost" onClick={handleSubmit} disabled={submitting}>Skip</Button>
               <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit

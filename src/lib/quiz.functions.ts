@@ -103,6 +103,28 @@ const SubmitInput = z.object({
   timeTakenSeconds: z.number().int().min(0).max(100000),
   feedbackRating: z.number().int().min(1).max(5).optional(),
   feedbackText: z.string().trim().max(1000).optional().default(""),
+  internshipFeedback: z
+    .object({
+      section: z.string().trim().max(20).optional(),
+      facultyClarity: z.number().int().min(1).max(4).optional(),
+      facultyEngagement: z.number().int().min(1).max(4).optional(),
+      facultyExpertise: z.number().int().min(1).max(4).optional(),
+      facultyAnswering: z.number().int().min(1).max(4).optional(),
+      teachingPace: z.string().trim().max(40).optional(),
+      resourcesUsefulness: z.string().trim().max(40).optional(),
+      taskCompletion: z.string().trim().max(60).optional(),
+      quizzesUsefulness: z.string().trim().max(40).optional(),
+      impactClarity: z.number().int().min(1).max(4).optional(),
+      impactRelevance: z.number().int().min(1).max(4).optional(),
+      impactSkill: z.number().int().min(1).max(4).optional(),
+      impactKnowledge: z.number().int().min(1).max(4).optional(),
+      courseRating: z.number().int().min(1).max(5).optional(),
+      trainerRating: z.number().int().min(1).max(5).optional(),
+      organizationRating: z.number().int().min(1).max(5).optional(),
+      satisfactionRating: z.number().int().min(1).max(5).optional(),
+      suggestions: z.string().trim().max(2000).optional(),
+    })
+    .optional(),
 });
 
 export const submitQuiz = createServerFn({ method: "POST" })
@@ -110,7 +132,7 @@ export const submitQuiz = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
-      .select("id, title, status")
+      .select("id, title, status, batch_id")
       .eq("share_code", data.code)
       .maybeSingle();
     if (!quiz || quiz.status !== "published") throw new Error("This quiz is not available.");
@@ -161,6 +183,40 @@ export const submitQuiz = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
+
+    // Overall internship feedback (best-effort; only if any field was filled).
+    const fb = data.internshipFeedback;
+    if (fb) {
+      const hasAny = Object.values(fb).some(
+        (v) => (typeof v === "number" && v > 0) || (typeof v === "string" && v.trim().length > 0),
+      );
+      if (hasAny) {
+        await supabaseAdmin.from("internship_feedback").insert({
+          quiz_id: quiz.id,
+          batch_id: quiz.batch_id ?? null,
+          student_name: data.fullName,
+          student_email: data.email,
+          section: fb.section ?? null,
+          faculty_clarity: fb.facultyClarity ?? null,
+          faculty_engagement: fb.facultyEngagement ?? null,
+          faculty_expertise: fb.facultyExpertise ?? null,
+          faculty_answering: fb.facultyAnswering ?? null,
+          teaching_pace: fb.teachingPace ?? null,
+          resources_usefulness: fb.resourcesUsefulness ?? null,
+          task_completion: fb.taskCompletion ?? null,
+          quizzes_usefulness: fb.quizzesUsefulness ?? null,
+          impact_clarity: fb.impactClarity ?? null,
+          impact_relevance: fb.impactRelevance ?? null,
+          impact_skill: fb.impactSkill ?? null,
+          impact_knowledge: fb.impactKnowledge ?? null,
+          course_rating: fb.courseRating ?? null,
+          trainer_rating: fb.trainerRating ?? null,
+          organization_rating: fb.organizationRating ?? null,
+          satisfaction_rating: fb.satisfactionRating ?? null,
+          suggestions: fb.suggestions ?? "",
+        });
+      }
+    }
 
     // AI performance summary (best-effort)
     let summary = "";
