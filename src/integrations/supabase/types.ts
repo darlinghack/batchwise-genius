@@ -53,6 +53,102 @@ export type Database = {
         }
         Relationships: []
       }
+      internship_feedback: {
+        Row: {
+          batch_id: string | null
+          course_rating: number | null
+          created_at: string
+          faculty_answering: number | null
+          faculty_clarity: number | null
+          faculty_engagement: number | null
+          faculty_expertise: number | null
+          id: string
+          impact_clarity: number | null
+          impact_knowledge: number | null
+          impact_relevance: number | null
+          impact_skill: number | null
+          organization_rating: number | null
+          quiz_id: string
+          quizzes_usefulness: string | null
+          resources_usefulness: string | null
+          satisfaction_rating: number | null
+          section: string | null
+          student_email: string
+          student_name: string
+          suggestions: string
+          task_completion: string | null
+          teaching_pace: string | null
+          trainer_rating: number | null
+        }
+        Insert: {
+          batch_id?: string | null
+          course_rating?: number | null
+          created_at?: string
+          faculty_answering?: number | null
+          faculty_clarity?: number | null
+          faculty_engagement?: number | null
+          faculty_expertise?: number | null
+          id?: string
+          impact_clarity?: number | null
+          impact_knowledge?: number | null
+          impact_relevance?: number | null
+          impact_skill?: number | null
+          organization_rating?: number | null
+          quiz_id: string
+          quizzes_usefulness?: string | null
+          resources_usefulness?: string | null
+          satisfaction_rating?: number | null
+          section?: string | null
+          student_email?: string
+          student_name?: string
+          suggestions?: string
+          task_completion?: string | null
+          teaching_pace?: string | null
+          trainer_rating?: number | null
+        }
+        Update: {
+          batch_id?: string | null
+          course_rating?: number | null
+          created_at?: string
+          faculty_answering?: number | null
+          faculty_clarity?: number | null
+          faculty_engagement?: number | null
+          faculty_expertise?: number | null
+          id?: string
+          impact_clarity?: number | null
+          impact_knowledge?: number | null
+          impact_relevance?: number | null
+          impact_skill?: number | null
+          organization_rating?: number | null
+          quiz_id?: string
+          quizzes_usefulness?: string | null
+          resources_usefulness?: string | null
+          satisfaction_rating?: number | null
+          section?: string | null
+          student_email?: string
+          student_name?: string
+          suggestions?: string
+          task_completion?: string | null
+          teaching_pace?: string | null
+          trainer_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "internship_feedback_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "internship_feedback_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
