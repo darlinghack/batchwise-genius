@@ -266,6 +266,106 @@ function BatchAnalytics() {
           </div>
         )}
       </Card>
+
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-semibold"><Star className="h-4 w-4 text-warning" /> Internship Feedback</h2>
+          <Badge variant="secondary">{fbCount} response{fbCount === 1 ? "" : "s"}</Badge>
+        </div>
+
+        {fbCount === 0 ? (
+          <p className="text-sm text-muted-foreground">No internship feedback submitted yet. Students can fill it after completing any quiz.</p>
+        ) : (
+          <div className="space-y-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {overallRatings.map((r) => (
+                <div key={r.label} className="rounded-xl border border-border p-4">
+                  <p className="text-xs text-muted-foreground">{r.label}</p>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="text-2xl font-bold">{r.value || "—"}</span>
+                    {r.value > 0 && <span className="text-xs text-muted-foreground">/ 5</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div>
+                <p className="mb-3 text-sm font-semibold">Faculty teaching quality <span className="font-normal text-muted-foreground">(of 4)</span></p>
+                <div className="space-y-2">
+                  {facultyAvgs.map((r) => (
+                    <div key={r.label} className="flex items-center gap-3">
+                      <span className="w-44 shrink-0 truncate text-sm">{r.label}</span>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${(r.value / 4) * 100}%` }} />
+                      </div>
+                      <span className="w-8 shrink-0 text-right text-sm font-semibold">{r.value || "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-3 text-sm font-semibold">Learning impact <span className="font-normal text-muted-foreground">(of 4)</span></p>
+                <div className="space-y-2">
+                  {impactAvgs.map((r) => (
+                    <div key={r.label} className="flex items-center gap-3">
+                      <span className="w-44 shrink-0 truncate text-sm">{r.label}</span>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-success" style={{ width: `${(r.value / 4) * 100}%` }} />
+                      </div>
+                      <span className="w-8 shrink-0 text-right text-sm font-semibold">{r.value || "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { title: "Teaching pace", dist: paceDist },
+                { title: "Resources usefulness", dist: resourcesDist },
+                { title: "Task completion", dist: tasksDist },
+                { title: "Daily quizzes usefulness", dist: quizzesDist },
+              ].map((group) => (
+                <div key={group.title}>
+                  <p className="mb-2 text-sm font-semibold">{group.title}</p>
+                  <div className="space-y-1.5">
+                    {group.dist.map((d) => {
+                      const pct = fbCount ? Math.round((d.count / fbCount) * 100) : 0;
+                      return (
+                        <div key={d.label} className="text-xs">
+                          <div className="flex justify-between text-muted-foreground"><span className="truncate">{d.label}</span><span>{d.count}</span></div>
+                          <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                            <div className="h-full rounded-full bg-chart-3" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <p className="mb-3 flex items-center gap-2 text-sm font-semibold"><MessageSquare className="h-4 w-4" /> Suggestions ({comments.length})</p>
+              {comments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No written suggestions yet.</p>
+              ) : (
+                <div className="max-h-72 space-y-3 overflow-y-auto">
+                  {comments.map((c, i) => (
+                    <div key={i} className="rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">{c.student_name || "Anonymous"}{c.section ? ` · ${c.section}` : ""}</p>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{c.suggestions}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
