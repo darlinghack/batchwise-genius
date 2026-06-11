@@ -32,6 +32,125 @@ export const Route = createFileRoute("/quiz/$shareCode")({
 
 type Result = Awaited<ReturnType<typeof submitQuiz>>;
 
+// ---- Internship feedback option sets ----
+const SECTIONS = ["CSD", "CSM", "CSE"] as const;
+const GRID4 = [
+  { label: "Excellent", value: 4 },
+  { label: "Good", value: 3 },
+  { label: "Fair", value: 2 },
+  { label: "Poor", value: 1 },
+];
+const IMPACT4 = [
+  { label: "Very Helpful", value: 4 },
+  { label: "Helpful", value: 3 },
+  { label: "Slightly Helpful", value: 2 },
+  { label: "Not Helpful", value: 1 },
+];
+const PACE = ["Too Fast", "Just Right", "Too Slow"];
+const USEFUL = ["Very Useful", "Useful", "Slightly Useful", "Not Useful"];
+const TASKS = ["Yes, all of them", "Most of them", "Some of them", "No, very few/none"];
+const FACULTY_ROWS = [
+  { key: "clarity", label: "Clarity of concepts" },
+  { key: "engagement", label: "Engagement / interaction" },
+  { key: "expertise", label: "Expertise in topics" },
+  { key: "answering", label: "Answering questions effectively" },
+] as const;
+const IMPACT_ROWS = [
+  { key: "clarity", label: "Clarity of concepts" },
+  { key: "relevance", label: "Relevance to job / studies" },
+  { key: "skill", label: "Skill application" },
+  { key: "knowledge", label: "Overall knowledge improvement" },
+] as const;
+
+function ChoiceRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(value === opt ? "" : opt)}
+            className={cn(
+              "rounded-lg border px-3 py-1.5 text-sm transition-colors",
+              value === opt ? "border-primary bg-primary/5 font-medium text-primary" : "border-border hover:border-primary/40",
+            )}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GridScale({
+  title,
+  rows,
+  options,
+  values,
+  onChange,
+}: {
+  title: string;
+  rows: readonly { key: string; label: string }[];
+  options: { label: string; value: number }[];
+  values: Record<string, number>;
+  onChange: (key: string, value: number) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{title}</Label>
+      <div className="space-y-2">
+        {rows.map((row) => (
+          <div key={row.key} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm">{row.label}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onChange(row.key, values[row.key] === opt.value ? 0 : opt.value)}
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-xs transition-colors",
+                    values[row.key] === opt.value ? "border-primary bg-primary/5 font-medium text-primary" : "border-border hover:border-primary/40",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StarRow({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChange(value === n ? 0 : n)}
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(0)}
+            className="transition-transform hover:scale-110"
+            aria-label={`${n} star${n > 1 ? "s" : ""}`}
+          >
+            <Star className={cn("h-6 w-6", (hover || value) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PublicQuiz() {
   const { shareCode } = Route.useParams();
   const fetchQuiz = useServerFn(getPublicQuiz);
