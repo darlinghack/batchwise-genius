@@ -127,6 +127,38 @@ function BatchAnalytics() {
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 5);
 
+  // ---- internship feedback aggregation ----
+  const fbCount = feedback.length;
+  const avgOf = (key: keyof Feedback) => {
+    const vals = feedback.map((f) => f[key]).filter((v): v is number => typeof v === "number" && v > 0);
+    return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : 0;
+  };
+  const overallRatings = [
+    { label: "Course", value: avgOf("course_rating") },
+    { label: "Trainer", value: avgOf("trainer_rating") },
+    { label: "Organization", value: avgOf("organization_rating") },
+    { label: "Satisfaction", value: avgOf("satisfaction_rating") },
+  ];
+  const facultyAvgs = [
+    { label: "Clarity of concepts", value: avgOf("faculty_clarity") },
+    { label: "Engagement", value: avgOf("faculty_engagement") },
+    { label: "Expertise", value: avgOf("faculty_expertise") },
+    { label: "Answering questions", value: avgOf("faculty_answering") },
+  ];
+  const impactAvgs = [
+    { label: "Clarity of concepts", value: avgOf("impact_clarity") },
+    { label: "Relevance", value: avgOf("impact_relevance") },
+    { label: "Skill application", value: avgOf("impact_skill") },
+    { label: "Knowledge improvement", value: avgOf("impact_knowledge") },
+  ];
+  const distOf = (key: keyof Feedback, opts: string[]) =>
+    opts.map((opt) => ({ label: opt, count: feedback.filter((f) => f[key] === opt).length }));
+  const paceDist = distOf("teaching_pace", ["Too Fast", "Just Right", "Too Slow"]);
+  const resourcesDist = distOf("resources_usefulness", ["Very Useful", "Useful", "Slightly Useful", "Not Useful"]);
+  const tasksDist = distOf("task_completion", ["Yes, all of them", "Most of them", "Some of them", "No, very few/none"]);
+  const quizzesDist = distOf("quizzes_usefulness", ["Very Useful", "Useful", "Slightly Useful", "Not Useful"]);
+  const comments = feedback.filter((f) => (f.suggestions ?? "").trim().length > 0);
+
   async function generateInsight() {
     setLoadingInsight(true);
     const ctx = `Batch "${batch?.name}" (${batch?.course_name}). Quizzes: ${quizzes.length}. Attempts: ${attempts}. Average: ${avg}%. Pass rate: ${passPct}%. Per-quiz averages: ${perQuiz.map((p) => `${p.title}=${p.avg}%`).join(", ")}.`;
