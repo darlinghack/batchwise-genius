@@ -61,9 +61,10 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
-      .select("id, title, topic_name, type, difficulty, duration_minutes, status, num_questions")
+      .select("id, title, topic_name, type, difficulty, duration_minutes, status, num_questions, is_assessment, hide_results")
       .eq("share_code", data.code)
       .maybeSingle();
+
 
     if (!quiz) return { quiz: null, questions: [], reason: "not_found" as const };
     if (quiz.status !== "published")
