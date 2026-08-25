@@ -379,11 +379,16 @@ function PublicQuiz() {
               </Button>
               {current < questions.length - 1 ? (
                 <Button onClick={() => setCurrent((c) => c + 1)} className="bg-gradient-primary hover:opacity-90">Next <ChevronRight className="h-4 w-4" /></Button>
+              ) : quiz.is_assessment ? (
+                <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit assessment
+                </Button>
               ) : (
                 <Button onClick={() => setPhase("feedback")} className="bg-gradient-primary hover:opacity-90">
                   <Trophy className="h-4 w-4" /> Finish quiz
                 </Button>
               )}
+
             </div>
           </div>
         )}
