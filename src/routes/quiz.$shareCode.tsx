@@ -485,8 +485,21 @@ function PublicQuiz() {
           </Card>
         )}
 
-        {phase === "result" && result && (
+        {phase === "result" && result?.hidden && (
+          <Card className="p-8 text-center animate-fade-in-up">
+            <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
+            <h1 className="mt-4 text-2xl font-bold tracking-tight">Assessment submitted</h1>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Thank you, {info.fullName.trim() || "candidate"}. Your responses have been recorded successfully.
+              Scores are not shared for this assessment — the Datapro team will reach out to shortlisted candidates.
+            </p>
+            <p className="mt-4 text-xs text-muted-foreground">You may now close this window.</p>
+          </Card>
+        )}
+
+        {phase === "result" && result && !result.hidden && (
           <div className="space-y-6 animate-fade-in-up">
+
             <Card className="overflow-hidden text-center">
               <div className="bg-gradient-hero p-8 text-primary-foreground">
                 <Trophy className="mx-auto h-10 w-10" />
