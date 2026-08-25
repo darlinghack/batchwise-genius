@@ -98,8 +98,11 @@ const SubmitInput = z.object({
   code: z.string().min(1).max(40),
   fullName: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(160),
+  phone: z.string().trim().max(40).optional().default(""),
+  address: z.string().trim().max(300).optional().default(""),
   rollNumber: z.string().trim().max(60).optional().default(""),
   collegeName: z.string().trim().max(160).optional().default(""),
+
   answers: z.array(z.object({ questionId: z.string().uuid(), selected: z.number().int().min(-1).max(3) })).max(50),
   timeTakenSeconds: z.number().int().min(0).max(100000),
   feedbackRating: z.number().int().min(1).max(5).optional(),
