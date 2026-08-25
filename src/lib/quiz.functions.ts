@@ -61,9 +61,10 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
-      .select("id, title, topic_name, type, difficulty, duration_minutes, status, num_questions")
+      .select("id, title, topic_name, type, difficulty, duration_minutes, status, num_questions, is_assessment, hide_results")
       .eq("share_code", data.code)
       .maybeSingle();
+
 
     if (!quiz) return { quiz: null, questions: [], reason: "not_found" as const };
     if (quiz.status !== "published")
@@ -97,8 +98,11 @@ const SubmitInput = z.object({
   code: z.string().min(1).max(40),
   fullName: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(160),
+  phone: z.string().trim().max(40).optional().default(""),
+  address: z.string().trim().max(300).optional().default(""),
   rollNumber: z.string().trim().max(60).optional().default(""),
   collegeName: z.string().trim().max(160).optional().default(""),
+
   answers: z.array(z.object({ questionId: z.string().uuid(), selected: z.number().int().min(-1).max(3) })).max(50),
   timeTakenSeconds: z.number().int().min(0).max(100000),
   feedbackRating: z.number().int().min(1).max(5).optional(),
@@ -132,9 +136,10 @@ export const submitQuiz = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
-      .select("id, title, status, batch_id")
+      .select("id, title, status, batch_id, hide_results")
       .eq("share_code", data.code)
       .maybeSingle();
+
     if (!quiz || quiz.status !== "published") throw new Error("This quiz is not available.");
 
     const { data: questions } = await supabaseAdmin
@@ -170,8 +175,11 @@ export const submitQuiz = createServerFn({ method: "POST" })
         quiz_id: quiz.id,
         student_name: data.fullName,
         student_email: data.email,
+        phone: data.phone,
+        address: data.address,
         roll_number: data.rollNumber,
         college_name: data.collegeName,
+
         answers: data.answers,
         score,
         total,
@@ -218,6 +226,21 @@ export const submitQuiz = createServerFn({ method: "POST" })
       }
     }
 
+    // Assessments hide every scoring detail from the candidate.
+    if (quiz.hide_results) {
+      return {
+        submissionId: inserted?.id ?? null,
+        hidden: true as const,
+        score: 0,
+        total,
+        percentage: 0,
+        points: 0,
+        timeTakenSeconds: data.timeTakenSeconds,
+        review: [] as typeof review,
+        summary: "",
+      };
+    }
+
     // AI performance summary (best-effort)
     let summary = "";
     try {
@@ -233,6 +256,7 @@ export const submitQuiz = createServerFn({ method: "POST" })
 
     return {
       submissionId: inserted?.id ?? null,
+      hidden: false as const,
       score,
       total,
       percentage,
@@ -242,6 +266,7 @@ export const submitQuiz = createServerFn({ method: "POST" })
       summary,
     };
   });
+
 
 export const deleteQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

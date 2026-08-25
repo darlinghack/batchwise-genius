@@ -162,7 +162,7 @@ function PublicQuiz() {
   });
 
   const [phase, setPhase] = useState<"info" | "quiz" | "feedback" | "result">("info");
-  const [info, setInfo] = useState({ fullName: "", email: "", rollNumber: "", collegeName: "" });
+  const [info, setInfo] = useState({ fullName: "", email: "", phone: "", address: "", rollNumber: "", collegeName: "" });
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -230,39 +230,45 @@ function PublicQuiz() {
     setSubmitting(true);
     try {
       const payload = questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 }));
+      const isAssessment = !!quiz?.is_assessment;
       const res = await submit({
         data: {
           code: shareCode,
           fullName: info.fullName.trim(),
           email: info.email.trim(),
+          phone: info.phone.trim(),
+          address: info.address.trim(),
           rollNumber: info.rollNumber.trim(),
           collegeName: info.collegeName.trim(),
           answers: payload,
           timeTakenSeconds: Math.round((Date.now() - startRef.current) / 1000),
-          feedbackRating: rating > 0 ? rating : undefined,
-          feedbackText: feedbackText.trim(),
-          internshipFeedback: {
-            section: section || undefined,
-            facultyClarity: faculty.clarity || undefined,
-            facultyEngagement: faculty.engagement || undefined,
-            facultyExpertise: faculty.expertise || undefined,
-            facultyAnswering: faculty.answering || undefined,
-            teachingPace: pace || undefined,
-            resourcesUsefulness: resources || undefined,
-            taskCompletion: tasks || undefined,
-            quizzesUsefulness: quizUseful || undefined,
-            impactClarity: impact.clarity || undefined,
-            impactRelevance: impact.relevance || undefined,
-            impactSkill: impact.skill || undefined,
-            impactKnowledge: impact.knowledge || undefined,
-            courseRating: courseRating || undefined,
-            trainerRating: trainerRating || undefined,
-            organizationRating: orgRating || undefined,
-            satisfactionRating: satisfaction || undefined,
-            suggestions: suggestions.trim() || undefined,
-          },
+          feedbackRating: !isAssessment && rating > 0 ? rating : undefined,
+          feedbackText: isAssessment ? "" : feedbackText.trim(),
+          internshipFeedback: isAssessment
+            ? undefined
+            : {
+                section: section || undefined,
+                facultyClarity: faculty.clarity || undefined,
+                facultyEngagement: faculty.engagement || undefined,
+                facultyExpertise: faculty.expertise || undefined,
+                facultyAnswering: faculty.answering || undefined,
+                teachingPace: pace || undefined,
+                resourcesUsefulness: resources || undefined,
+                taskCompletion: tasks || undefined,
+                quizzesUsefulness: quizUseful || undefined,
+                impactClarity: impact.clarity || undefined,
+                impactRelevance: impact.relevance || undefined,
+                impactSkill: impact.skill || undefined,
+                impactKnowledge: impact.knowledge || undefined,
+                courseRating: courseRating || undefined,
+                trainerRating: trainerRating || undefined,
+                organizationRating: orgRating || undefined,
+                satisfactionRating: satisfaction || undefined,
+                suggestions: suggestions.trim() || undefined,
+              },
         },
       });
+
       setResult(res);
       localStorage.removeItem(`quiz-${shareCode}`);
       setPhase("result");
@@ -314,18 +320,30 @@ function PublicQuiz() {
         {phase === "info" && (
           <Card className="p-6 sm:p-8 animate-fade-in-up">
             <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
-            <p className="mt-1 text-sm capitalize text-muted-foreground">{quiz.type} · {quiz.difficulty} · {questions.length} questions · {quiz.duration_minutes} min</p>
+            <p className="mt-1 text-sm capitalize text-muted-foreground">
+              {quiz.is_assessment ? "assessment" : quiz.type} · {quiz.difficulty} · {questions.length} questions · {quiz.duration_minutes} min
+            </p>
+            {quiz.hide_results && (
+              <p className="mt-3 rounded-lg bg-accent/40 p-3 text-sm text-muted-foreground">
+                This is an evaluated assessment. Your answers are recorded, but scores and correct answers are not shown — the team will contact shortlisted candidates.
+              </p>
+            )}
             <form onSubmit={startQuiz} className="mt-6 space-y-4">
               <div className="space-y-2"><Label>Full name *</Label><Input value={info.fullName} onChange={(e) => setInfo({ ...info, fullName: e.target.value })} required /></div>
               <div className="space-y-2"><Label>Email *</Label><Input type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} required /></div>
               <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Phone number</Label><Input value={info.phone} onChange={(e) => setInfo({ ...info, phone: e.target.value })} placeholder="10-digit mobile" /></div>
                 <div className="space-y-2"><Label>Roll number</Label><Input value={info.rollNumber} onChange={(e) => setInfo({ ...info, rollNumber: e.target.value })} /></div>
-                <div className="space-y-2"><Label>College name</Label><Input value={info.collegeName} onChange={(e) => setInfo({ ...info, collegeName: e.target.value })} /></div>
+                <div className="space-y-2"><Label>College name (if applicable)</Label><Input value={info.collegeName} onChange={(e) => setInfo({ ...info, collegeName: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Address</Label><Input value={info.address} onChange={(e) => setInfo({ ...info, address: e.target.value })} placeholder="City / area" /></div>
               </div>
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">Start quiz</Button>
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
+                {quiz.is_assessment ? "Start assessment" : "Start quiz"}
+              </Button>
             </form>
           </Card>
         )}
+
 
         {phase === "quiz" && questions[current] && (
           <div className="animate-fade-in-up">
@@ -361,11 +379,16 @@ function PublicQuiz() {
               </Button>
               {current < questions.length - 1 ? (
                 <Button onClick={() => setCurrent((c) => c + 1)} className="bg-gradient-primary hover:opacity-90">Next <ChevronRight className="h-4 w-4" /></Button>
+              ) : quiz.is_assessment ? (
+                <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit assessment
+                </Button>
               ) : (
                 <Button onClick={() => setPhase("feedback")} className="bg-gradient-primary hover:opacity-90">
                   <Trophy className="h-4 w-4" /> Finish quiz
                 </Button>
               )}
+
             </div>
           </div>
         )}
@@ -462,8 +485,21 @@ function PublicQuiz() {
           </Card>
         )}
 
-        {phase === "result" && result && (
+        {phase === "result" && result?.hidden && (
+          <Card className="p-8 text-center animate-fade-in-up">
+            <CheckCircle2 className="mx-auto h-12 w-12 text-success" />
+            <h1 className="mt-4 text-2xl font-bold tracking-tight">Assessment submitted</h1>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Thank you, {info.fullName.trim() || "candidate"}. Your responses have been recorded successfully.
+              Scores are not shared for this assessment — the Datapro team will reach out to shortlisted candidates.
+            </p>
+            <p className="mt-4 text-xs text-muted-foreground">You may now close this window.</p>
+          </Card>
+        )}
+
+        {phase === "result" && result && !result.hidden && (
           <div className="space-y-6 animate-fade-in-up">
+
             <Card className="overflow-hidden text-center">
               <div className="bg-gradient-hero p-8 text-primary-foreground">
                 <Trophy className="mx-auto h-10 w-10" />
