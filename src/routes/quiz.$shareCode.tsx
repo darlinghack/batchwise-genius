@@ -162,7 +162,7 @@ function PublicQuiz() {
   });
 
   const [phase, setPhase] = useState<"info" | "quiz" | "feedback" | "result">("info");
-  const [info, setInfo] = useState({ fullName: "", email: "", rollNumber: "", collegeName: "" });
+  const [info, setInfo] = useState({ fullName: "", email: "", phone: "", address: "", rollNumber: "", collegeName: "" });
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [secondsLeft, setSecondsLeft] = useState(0);
