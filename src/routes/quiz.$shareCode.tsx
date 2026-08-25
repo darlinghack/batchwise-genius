@@ -320,18 +320,30 @@ function PublicQuiz() {
         {phase === "info" && (
           <Card className="p-6 sm:p-8 animate-fade-in-up">
             <h1 className="text-2xl font-bold tracking-tight">{quiz.title}</h1>
-            <p className="mt-1 text-sm capitalize text-muted-foreground">{quiz.type} · {quiz.difficulty} · {questions.length} questions · {quiz.duration_minutes} min</p>
+            <p className="mt-1 text-sm capitalize text-muted-foreground">
+              {quiz.is_assessment ? "assessment" : quiz.type} · {quiz.difficulty} · {questions.length} questions · {quiz.duration_minutes} min
+            </p>
+            {quiz.hide_results && (
+              <p className="mt-3 rounded-lg bg-accent/40 p-3 text-sm text-muted-foreground">
+                This is an evaluated assessment. Your answers are recorded, but scores and correct answers are not shown — the team will contact shortlisted candidates.
+              </p>
+            )}
             <form onSubmit={startQuiz} className="mt-6 space-y-4">
               <div className="space-y-2"><Label>Full name *</Label><Input value={info.fullName} onChange={(e) => setInfo({ ...info, fullName: e.target.value })} required /></div>
               <div className="space-y-2"><Label>Email *</Label><Input type="email" value={info.email} onChange={(e) => setInfo({ ...info, email: e.target.value })} required /></div>
               <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Phone number</Label><Input value={info.phone} onChange={(e) => setInfo({ ...info, phone: e.target.value })} placeholder="10-digit mobile" /></div>
                 <div className="space-y-2"><Label>Roll number</Label><Input value={info.rollNumber} onChange={(e) => setInfo({ ...info, rollNumber: e.target.value })} /></div>
-                <div className="space-y-2"><Label>College name</Label><Input value={info.collegeName} onChange={(e) => setInfo({ ...info, collegeName: e.target.value })} /></div>
+                <div className="space-y-2"><Label>College name (if applicable)</Label><Input value={info.collegeName} onChange={(e) => setInfo({ ...info, collegeName: e.target.value })} /></div>
+                <div className="space-y-2"><Label>Address</Label><Input value={info.address} onChange={(e) => setInfo({ ...info, address: e.target.value })} placeholder="City / area" /></div>
               </div>
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">Start quiz</Button>
+              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90">
+                {quiz.is_assessment ? "Start assessment" : "Start quiz"}
+              </Button>
             </form>
           </Card>
         )}
+
 
         {phase === "quiz" && questions[current] && (
           <div className="animate-fade-in-up">
