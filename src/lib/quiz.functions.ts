@@ -175,8 +175,11 @@ export const submitQuiz = createServerFn({ method: "POST" })
         quiz_id: quiz.id,
         student_name: data.fullName,
         student_email: data.email,
+        phone: data.phone,
+        address: data.address,
         roll_number: data.rollNumber,
         college_name: data.collegeName,
+
         answers: data.answers,
         score,
         total,
