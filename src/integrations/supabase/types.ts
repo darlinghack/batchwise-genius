@@ -227,7 +227,9 @@ export type Database = {
           created_at: string
           difficulty: Database["public"]["Enums"]["quiz_difficulty"]
           duration_minutes: number
+          hide_results: boolean
           id: string
+          is_assessment: boolean
           num_questions: number
           share_code: string
           status: Database["public"]["Enums"]["quiz_status"]
@@ -244,7 +246,9 @@ export type Database = {
           created_at?: string
           difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
           duration_minutes?: number
+          hide_results?: boolean
           id?: string
+          is_assessment?: boolean
           num_questions?: number
           share_code?: string
           status?: Database["public"]["Enums"]["quiz_status"]
@@ -261,7 +265,9 @@ export type Database = {
           created_at?: string
           difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
           duration_minutes?: number
+          hide_results?: boolean
           id?: string
+          is_assessment?: boolean
           num_questions?: number
           share_code?: string
           status?: Database["public"]["Enums"]["quiz_status"]
@@ -298,12 +304,14 @@ export type Database = {
       }
       submissions: {
         Row: {
+          address: string
           answers: Json
           college_name: string
           feedback_rating: number | null
           feedback_text: string
           id: string
           percentage: number
+          phone: string
           points: number
           quiz_id: string
           roll_number: string
@@ -315,12 +323,14 @@ export type Database = {
           total: number
         }
         Insert: {
+          address?: string
           answers?: Json
           college_name?: string
           feedback_rating?: number | null
           feedback_text?: string
           id?: string
           percentage?: number
+          phone?: string
           points?: number
           quiz_id: string
           roll_number?: string
@@ -332,12 +342,14 @@ export type Database = {
           total?: number
         }
         Update: {
+          address?: string
           answers?: Json
           college_name?: string
           feedback_rating?: number | null
           feedback_text?: string
           id?: string
           percentage?: number
+          phone?: string
           points?: number
           quiz_id?: string
           roll_number?: string
