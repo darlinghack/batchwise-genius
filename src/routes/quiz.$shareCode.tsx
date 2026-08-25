@@ -230,39 +230,45 @@ function PublicQuiz() {
     setSubmitting(true);
     try {
       const payload = questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 }));
+      const isAssessment = !!quiz?.is_assessment;
       const res = await submit({
         data: {
           code: shareCode,
           fullName: info.fullName.trim(),
           email: info.email.trim(),
+          phone: info.phone.trim(),
+          address: info.address.trim(),
           rollNumber: info.rollNumber.trim(),
           collegeName: info.collegeName.trim(),
           answers: payload,
           timeTakenSeconds: Math.round((Date.now() - startRef.current) / 1000),
-          feedbackRating: rating > 0 ? rating : undefined,
-          feedbackText: feedbackText.trim(),
-          internshipFeedback: {
-            section: section || undefined,
-            facultyClarity: faculty.clarity || undefined,
-            facultyEngagement: faculty.engagement || undefined,
-            facultyExpertise: faculty.expertise || undefined,
-            facultyAnswering: faculty.answering || undefined,
-            teachingPace: pace || undefined,
-            resourcesUsefulness: resources || undefined,
-            taskCompletion: tasks || undefined,
-            quizzesUsefulness: quizUseful || undefined,
-            impactClarity: impact.clarity || undefined,
-            impactRelevance: impact.relevance || undefined,
-            impactSkill: impact.skill || undefined,
-            impactKnowledge: impact.knowledge || undefined,
-            courseRating: courseRating || undefined,
-            trainerRating: trainerRating || undefined,
-            organizationRating: orgRating || undefined,
-            satisfactionRating: satisfaction || undefined,
-            suggestions: suggestions.trim() || undefined,
-          },
+          feedbackRating: !isAssessment && rating > 0 ? rating : undefined,
+          feedbackText: isAssessment ? "" : feedbackText.trim(),
+          internshipFeedback: isAssessment
+            ? undefined
+            : {
+                section: section || undefined,
+                facultyClarity: faculty.clarity || undefined,
+                facultyEngagement: faculty.engagement || undefined,
+                facultyExpertise: faculty.expertise || undefined,
+                facultyAnswering: faculty.answering || undefined,
+                teachingPace: pace || undefined,
+                resourcesUsefulness: resources || undefined,
+                taskCompletion: tasks || undefined,
+                quizzesUsefulness: quizUseful || undefined,
+                impactClarity: impact.clarity || undefined,
+                impactRelevance: impact.relevance || undefined,
+                impactSkill: impact.skill || undefined,
+                impactKnowledge: impact.knowledge || undefined,
+                courseRating: courseRating || undefined,
+                trainerRating: trainerRating || undefined,
+                organizationRating: orgRating || undefined,
+                satisfactionRating: satisfaction || undefined,
+                suggestions: suggestions.trim() || undefined,
+              },
         },
       });
+
       setResult(res);
       localStorage.removeItem(`quiz-${shareCode}`);
       setPhase("result");
