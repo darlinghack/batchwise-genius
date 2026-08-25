@@ -226,6 +226,21 @@ export const submitQuiz = createServerFn({ method: "POST" })
       }
     }
 
+    // Assessments hide every scoring detail from the candidate.
+    if (quiz.hide_results) {
+      return {
+        submissionId: inserted?.id ?? null,
+        hidden: true as const,
+        score: 0,
+        total,
+        percentage: 0,
+        points: 0,
+        timeTakenSeconds: data.timeTakenSeconds,
+        review: [] as typeof review,
+        summary: "",
+      };
+    }
+
     // AI performance summary (best-effort)
     let summary = "";
     try {
@@ -241,6 +256,7 @@ export const submitQuiz = createServerFn({ method: "POST" })
 
     return {
       submissionId: inserted?.id ?? null,
+      hidden: false as const,
       score,
       total,
       percentage,
@@ -250,6 +266,7 @@ export const submitQuiz = createServerFn({ method: "POST" })
       summary,
     };
   });
+
 
 export const deleteQuiz = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
