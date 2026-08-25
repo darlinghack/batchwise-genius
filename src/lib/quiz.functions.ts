@@ -136,9 +136,10 @@ export const submitQuiz = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
-      .select("id, title, status, batch_id")
+      .select("id, title, status, batch_id, hide_results")
       .eq("share_code", data.code)
       .maybeSingle();
+
     if (!quiz || quiz.status !== "published") throw new Error("This quiz is not available.");
 
     const { data: questions } = await supabaseAdmin
