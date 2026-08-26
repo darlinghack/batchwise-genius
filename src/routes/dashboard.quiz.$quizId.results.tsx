@@ -90,7 +90,7 @@ function QuizResults() {
       const [subs, questions] = await Promise.all([
         supabase
           .from("submissions")
-          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers, feedback_rating, feedback_text")
+          .select("id, student_name, student_email, phone, address, roll_number, college_name, score, total, percentage, time_taken_seconds, submitted_at, answers, feedback_rating, feedback_text")
           .eq("quiz_id", quizId),
         supabase
           .from("questions")
