@@ -9,6 +9,7 @@ import {
   LogOut,
   Loader2,
   Menu,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
@@ -72,7 +73,7 @@ function DashboardLayout() {
           <Logo />
         </div>
         <nav className="space-y-1 p-3">
-          {nav.map((item) => (
+          {nav.filter((item) => !item.adminOnly || role === "super_admin").map((item) => (
             <Link
               key={item.to}
               to={item.to}
