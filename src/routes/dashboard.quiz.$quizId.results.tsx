@@ -71,6 +71,13 @@ function QuizResults() {
   const insightFn = useServerFn(getBatchInsight);
   const [insight, setInsight] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
+  const [search, setSearch] = useState("");
+  const [college, setCollege] = useState("all");
+  const [minPct, setMinPct] = useState<string>("");
+  const [maxPct, setMaxPct] = useState<string>("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
 
   const { data: quiz } = useQuery({
     queryKey: ["quiz-results-meta", quizId],
