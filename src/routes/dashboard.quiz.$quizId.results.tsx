@@ -231,12 +231,31 @@ function QuizResults() {
   }
 
   function exportCsv() {
-    const rows = [["Rank", "Student", "Email", "Score", "Total", "Percentage", "Time (s)"]];
+    const rows = [[
+      "Rank", "Student", "Email", "Phone", "Roll number", "College", "Address",
+      "Score", "Total", "Percentage", "Time (s)", "Submitted at",
+      "Feedback rating", "Feedback",
+    ]];
     ranked.forEach((s, i) =>
-      rows.push([String(i + 1), s.student_name, s.student_email, String(s.score), String(s.total), String(s.percentage), String(s.time_taken_seconds)]),
+      rows.push([
+        String(i + 1),
+        s.student_name,
+        s.student_email,
+        s.phone ?? "",
+        s.roll_number ?? "",
+        s.college_name ?? "",
+        s.address ?? "",
+        String(s.score),
+        String(s.total),
+        String(s.percentage),
+        String(s.time_taken_seconds),
+        s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "",
+        s.feedback_rating ? String(s.feedback_rating) : "",
+        s.feedback_text ?? "",
+      ]),
     );
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -244,6 +263,7 @@ function QuizResults() {
     a.click();
     URL.revokeObjectURL(url);
   }
+
 
   const rankIcon = (i: number) =>
     i === 0 ? <Crown className="h-4 w-4 text-warning" /> : i === 1 ? <Medal className="h-4 w-4 text-muted-foreground" /> : i === 2 ? <Medal className="h-4 w-4 text-chart-5" /> : null;
