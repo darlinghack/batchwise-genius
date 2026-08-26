@@ -44,14 +44,20 @@ interface Sub {
   id: string;
   student_name: string;
   student_email: string;
+  phone: string;
+  address: string;
+  roll_number: string;
+  college_name: string;
   score: number;
   total: number;
   percentage: number;
   time_taken_seconds: number;
+  submitted_at: string;
   answers: { questionId: string; selected: number }[];
   feedback_rating: number | null;
   feedback_text: string;
 }
+
 
 interface Q {
   id: string;
