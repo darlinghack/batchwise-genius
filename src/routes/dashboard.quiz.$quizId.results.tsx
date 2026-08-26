@@ -294,6 +294,106 @@ function QuizResults() {
         <p className="text-sm text-muted-foreground">Isolated results for this quiz instance only — never merged with other quizzes.</p>
       </div>
 
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-semibold"><Filter className="h-4 w-4 text-primary" /> Filters</h2>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{subs.length} of {allSubs.length} submissions</span>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}><X className="h-3.5 w-3.5" /> Clear</Button>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-1.5 lg:col-span-2">
+            <Label className="text-xs">Search name, email, roll no, college</Label>
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search candidates…" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">College</Label>
+            <Select value={college} onValueChange={setCollege}>
+              <SelectTrigger><SelectValue placeholder="All colleges" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All colleges</SelectItem>
+                {colleges.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Score range (%)</Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" min={0} max={100} value={minPct} onChange={(e) => setMinPct(e.target.value)} placeholder="Min" />
+              <Input type="number" min={0} max={100} value={maxPct} onChange={(e) => setMaxPct(e.target.value)} placeholder="Max" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">From date</Label>
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">To date</Label>
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border p-5">
+          <h2 className="font-semibold">Submission sheet</h2>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!subs.length}>
+            <Download className="h-4 w-4" /> Download sheet
+          </Button>
+        </div>
+        <div className="max-h-96 overflow-auto">
+          {ranked.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">No submissions match these filters.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 text-left">#</th>
+                  <th className="px-4 py-2 text-left">Candidate</th>
+                  <th className="px-4 py-2 text-left">Roll no</th>
+                  <th className="px-4 py-2 text-left">College</th>
+                  <th className="px-4 py-2 text-left">Phone</th>
+                  <th className="px-4 py-2 text-right">Score</th>
+                  <th className="px-4 py-2 text-right">Time</th>
+                  <th className="px-4 py-2 text-left">Submitted</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {ranked.map((s, i) => (
+                  <tr key={s.id}>
+                    <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
+                    <td className="px-4 py-2">
+                      <p className="font-medium">{s.student_name}</p>
+                      <p className="text-xs text-muted-foreground">{s.student_email}</p>
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">{s.roll_number || "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{s.college_name || "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{s.phone || "—"}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-primary">
+                      {Math.round(Number(s.percentage))}%
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">{s.score}/{s.total}</span>
+                    </td>
+                    <td className="px-4 py-2 text-right text-muted-foreground">
+                      {Math.floor(s.time_taken_seconds / 60)}m {s.time_taken_seconds % 60}s
+                    </td>
+                    <td className="px-4 py-2 text-xs text-muted-foreground">
+                      {s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Card>
+
+
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Submissions" value={attempts} icon={Send} />
         <StatCard label="Average Score" value={`${avg}%`} icon={TrendingUp} accent="success" />
