@@ -20,6 +20,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as QuizShareCodeRouteImport } from './routes/quiz.$shareCode'
 import { Route as DashboardQuizzesRouteImport } from './routes/dashboard.quizzes'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardAssessmentsRouteImport } from './routes/dashboard.assessments'
 import { Route as DashboardAnalyticsRouteImport } from './routes/dashboard.analytics'
 import { Route as DashboardBatchesIndexRouteImport } from './routes/dashboard.batches.index'
 import { Route as DashboardQuizQuizIdRouteImport } from './routes/dashboard.quiz.$quizId'
@@ -85,6 +86,11 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAssessmentsRoute = DashboardAssessmentsRouteImport.update({
+  id: '/assessments',
+  path: '/assessments',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAnalyticsRoute = DashboardAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/assessments': typeof DashboardAssessmentsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/assessments': typeof DashboardAssessmentsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard/analytics': typeof DashboardAnalyticsRoute
+  '/dashboard/assessments': typeof DashboardAssessmentsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/quizzes': typeof DashboardQuizzesRoute
   '/quiz/$shareCode': typeof QuizShareCodeRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/dashboard/analytics'
+    | '/dashboard/assessments'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
     | '/quiz/$shareCode'
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/dashboard/analytics'
+    | '/dashboard/assessments'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
     | '/quiz/$shareCode'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/dashboard/analytics'
+    | '/dashboard/assessments'
     | '/dashboard/profile'
     | '/dashboard/quizzes'
     | '/quiz/$shareCode'
@@ -355,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/assessments': {
+      id: '/dashboard/assessments'
+      path: '/assessments'
+      fullPath: '/dashboard/assessments'
+      preLoaderRoute: typeof DashboardAssessmentsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/analytics': {
       id: '/dashboard/analytics'
       path: '/analytics'
@@ -455,6 +474,7 @@ const DashboardQuizQuizIdRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardAnalyticsRoute: typeof DashboardAnalyticsRoute
+  DashboardAssessmentsRoute: typeof DashboardAssessmentsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardQuizzesRoute: typeof DashboardQuizzesRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -465,6 +485,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAnalyticsRoute: DashboardAnalyticsRoute,
+  DashboardAssessmentsRoute: DashboardAssessmentsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardQuizzesRoute: DashboardQuizzesRoute,
   DashboardIndexRoute: DashboardIndexRoute,
