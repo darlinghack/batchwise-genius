@@ -120,8 +120,41 @@ function QuizResults() {
     };
   }, [quizId, refetch]);
 
-  const subs = data?.subs ?? [];
+  const allSubs = data?.subs ?? [];
   const questions = data?.questions ?? [];
+
+  // ---- filters ----
+  const colleges = Array.from(
+    new Set(allSubs.map((s) => (s.college_name ?? "").trim()).filter(Boolean)),
+  ).sort();
+
+  const subs = allSubs.filter((s) => {
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const hay = `${s.student_name} ${s.student_email} ${s.roll_number ?? ""} ${s.college_name ?? ""} ${s.phone ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (college !== "all" && (s.college_name ?? "").trim() !== college) return false;
+    const pct = Number(s.percentage);
+    if (minPct !== "" && pct < Number(minPct)) return false;
+    if (maxPct !== "" && pct > Number(maxPct)) return false;
+    if (fromDate && new Date(s.submitted_at) < new Date(`${fromDate}T00:00:00`)) return false;
+    if (toDate && new Date(s.submitted_at) > new Date(`${toDate}T23:59:59`)) return false;
+    return true;
+  });
+
+  const filtersActive =
+    !!search.trim() || college !== "all" || minPct !== "" || maxPct !== "" || !!fromDate || !!toDate;
+
+  function clearFilters() {
+    setSearch("");
+    setCollege("all");
+    setMinPct("");
+    setMaxPct("");
+    setFromDate("");
+    setToDate("");
+  }
+
   const attempts = subs.length;
   const avg = attempts ? Math.round(subs.reduce((a, s) => a + Number(s.percentage), 0) / attempts) : 0;
   const high = attempts ? Math.round(Math.max(...subs.map((s) => Number(s.percentage)))) : 0;
