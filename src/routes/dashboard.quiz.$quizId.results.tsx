@@ -44,14 +44,20 @@ interface Sub {
   id: string;
   student_name: string;
   student_email: string;
+  phone: string;
+  address: string;
+  roll_number: string;
+  college_name: string;
   score: number;
   total: number;
   percentage: number;
   time_taken_seconds: number;
+  submitted_at: string;
   answers: { questionId: string; selected: number }[];
   feedback_rating: number | null;
   feedback_text: string;
 }
+
 
 interface Q {
   id: string;
@@ -65,6 +71,13 @@ function QuizResults() {
   const insightFn = useServerFn(getBatchInsight);
   const [insight, setInsight] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
+  const [search, setSearch] = useState("");
+  const [college, setCollege] = useState("all");
+  const [minPct, setMinPct] = useState<string>("");
+  const [maxPct, setMaxPct] = useState<string>("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
 
   const { data: quiz } = useQuery({
     queryKey: ["quiz-results-meta", quizId],
@@ -84,7 +97,7 @@ function QuizResults() {
       const [subs, questions] = await Promise.all([
         supabase
           .from("submissions")
-          .select("id, student_name, student_email, score, total, percentage, time_taken_seconds, answers, feedback_rating, feedback_text")
+          .select("id, student_name, student_email, phone, address, roll_number, college_name, score, total, percentage, time_taken_seconds, submitted_at, answers, feedback_rating, feedback_text")
           .eq("quiz_id", quizId),
         supabase
           .from("questions")
@@ -114,8 +127,41 @@ function QuizResults() {
     };
   }, [quizId, refetch]);
 
-  const subs = data?.subs ?? [];
+  const allSubs = data?.subs ?? [];
   const questions = data?.questions ?? [];
+
+  // ---- filters ----
+  const colleges = Array.from(
+    new Set(allSubs.map((s) => (s.college_name ?? "").trim()).filter(Boolean)),
+  ).sort();
+
+  const subs = allSubs.filter((s) => {
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const hay = `${s.student_name} ${s.student_email} ${s.roll_number ?? ""} ${s.college_name ?? ""} ${s.phone ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (college !== "all" && (s.college_name ?? "").trim() !== college) return false;
+    const pct = Number(s.percentage);
+    if (minPct !== "" && pct < Number(minPct)) return false;
+    if (maxPct !== "" && pct > Number(maxPct)) return false;
+    if (fromDate && new Date(s.submitted_at) < new Date(`${fromDate}T00:00:00`)) return false;
+    if (toDate && new Date(s.submitted_at) > new Date(`${toDate}T23:59:59`)) return false;
+    return true;
+  });
+
+  const filtersActive =
+    !!search.trim() || college !== "all" || minPct !== "" || maxPct !== "" || !!fromDate || !!toDate;
+
+  function clearFilters() {
+    setSearch("");
+    setCollege("all");
+    setMinPct("");
+    setMaxPct("");
+    setFromDate("");
+    setToDate("");
+  }
+
   const attempts = subs.length;
   const avg = attempts ? Math.round(subs.reduce((a, s) => a + Number(s.percentage), 0) / attempts) : 0;
   const high = attempts ? Math.round(Math.max(...subs.map((s) => Number(s.percentage)))) : 0;
@@ -185,12 +231,31 @@ function QuizResults() {
   }
 
   function exportCsv() {
-    const rows = [["Rank", "Student", "Email", "Score", "Total", "Percentage", "Time (s)"]];
+    const rows = [[
+      "Rank", "Student", "Email", "Phone", "Roll number", "College", "Address",
+      "Score", "Total", "Percentage", "Time (s)", "Submitted at",
+      "Feedback rating", "Feedback",
+    ]];
     ranked.forEach((s, i) =>
-      rows.push([String(i + 1), s.student_name, s.student_email, String(s.score), String(s.total), String(s.percentage), String(s.time_taken_seconds)]),
+      rows.push([
+        String(i + 1),
+        s.student_name,
+        s.student_email,
+        s.phone ?? "",
+        s.roll_number ?? "",
+        s.college_name ?? "",
+        s.address ?? "",
+        String(s.score),
+        String(s.total),
+        String(s.percentage),
+        String(s.time_taken_seconds),
+        s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "",
+        s.feedback_rating ? String(s.feedback_rating) : "",
+        s.feedback_text ?? "",
+      ]),
     );
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -198,6 +263,7 @@ function QuizResults() {
     a.click();
     URL.revokeObjectURL(url);
   }
+
 
   const rankIcon = (i: number) =>
     i === 0 ? <Crown className="h-4 w-4 text-warning" /> : i === 1 ? <Medal className="h-4 w-4 text-muted-foreground" /> : i === 2 ? <Medal className="h-4 w-4 text-chart-5" /> : null;
@@ -227,6 +293,106 @@ function QuizResults() {
         </div>
         <p className="text-sm text-muted-foreground">Isolated results for this quiz instance only — never merged with other quizzes.</p>
       </div>
+
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-semibold"><Filter className="h-4 w-4 text-primary" /> Filters</h2>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{subs.length} of {allSubs.length} submissions</span>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}><X className="h-3.5 w-3.5" /> Clear</Button>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-1.5 lg:col-span-2">
+            <Label className="text-xs">Search name, email, roll no, college</Label>
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search candidates…" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">College</Label>
+            <Select value={college} onValueChange={setCollege}>
+              <SelectTrigger><SelectValue placeholder="All colleges" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All colleges</SelectItem>
+                {colleges.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Score range (%)</Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" min={0} max={100} value={minPct} onChange={(e) => setMinPct(e.target.value)} placeholder="Min" />
+              <Input type="number" min={0} max={100} value={maxPct} onChange={(e) => setMaxPct(e.target.value)} placeholder="Max" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">From date</Label>
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">To date</Label>
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border p-5">
+          <h2 className="font-semibold">Submission sheet</h2>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!subs.length}>
+            <Download className="h-4 w-4" /> Download sheet
+          </Button>
+        </div>
+        <div className="max-h-96 overflow-auto">
+          {ranked.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">No submissions match these filters.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 text-left">#</th>
+                  <th className="px-4 py-2 text-left">Candidate</th>
+                  <th className="px-4 py-2 text-left">Roll no</th>
+                  <th className="px-4 py-2 text-left">College</th>
+                  <th className="px-4 py-2 text-left">Phone</th>
+                  <th className="px-4 py-2 text-right">Score</th>
+                  <th className="px-4 py-2 text-right">Time</th>
+                  <th className="px-4 py-2 text-left">Submitted</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {ranked.map((s, i) => (
+                  <tr key={s.id}>
+                    <td className="px-4 py-2 text-muted-foreground">{i + 1}</td>
+                    <td className="px-4 py-2">
+                      <p className="font-medium">{s.student_name}</p>
+                      <p className="text-xs text-muted-foreground">{s.student_email}</p>
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">{s.roll_number || "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{s.college_name || "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{s.phone || "—"}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-primary">
+                      {Math.round(Number(s.percentage))}%
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">{s.score}/{s.total}</span>
+                    </td>
+                    <td className="px-4 py-2 text-right text-muted-foreground">
+                      {Math.floor(s.time_taken_seconds / 60)}m {s.time_taken_seconds % 60}s
+                    </td>
+                    <td className="px-4 py-2 text-xs text-muted-foreground">
+                      {s.submitted_at ? new Date(s.submitted_at).toLocaleString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Card>
+
+
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Submissions" value={attempts} icon={Send} />
