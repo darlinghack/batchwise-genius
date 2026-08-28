@@ -19,6 +19,7 @@ export type Database = {
           course_name: string
           created_at: string
           end_date: string | null
+          feedback_form: Json | null
           id: string
           name: string
           start_date: string | null
@@ -31,6 +32,7 @@ export type Database = {
           course_name: string
           created_at?: string
           end_date?: string | null
+          feedback_form?: Json | null
           id?: string
           name: string
           start_date?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           course_name?: string
           created_at?: string
           end_date?: string | null
+          feedback_form?: Json | null
           id?: string
           name?: string
           start_date?: string | null
@@ -58,6 +61,7 @@ export type Database = {
           batch_id: string | null
           course_rating: number | null
           created_at: string
+          custom_answers: Json
           faculty_answering: number | null
           faculty_clarity: number | null
           faculty_engagement: number | null
@@ -84,6 +88,7 @@ export type Database = {
           batch_id?: string | null
           course_rating?: number | null
           created_at?: string
+          custom_answers?: Json
           faculty_answering?: number | null
           faculty_clarity?: number | null
           faculty_engagement?: number | null
@@ -110,6 +115,7 @@ export type Database = {
           batch_id?: string | null
           course_rating?: number | null
           created_at?: string
+          custom_answers?: Json
           faculty_answering?: number | null
           faculty_clarity?: number | null
           faculty_engagement?: number | null
@@ -227,6 +233,7 @@ export type Database = {
           created_at: string
           difficulty: Database["public"]["Enums"]["quiz_difficulty"]
           duration_minutes: number
+          feedback_form: Json | null
           hide_results: boolean
           id: string
           is_assessment: boolean
@@ -246,6 +253,7 @@ export type Database = {
           created_at?: string
           difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
           duration_minutes?: number
+          feedback_form?: Json | null
           hide_results?: boolean
           id?: string
           is_assessment?: boolean
@@ -265,6 +273,7 @@ export type Database = {
           created_at?: string
           difficulty?: Database["public"]["Enums"]["quiz_difficulty"]
           duration_minutes?: number
+          feedback_form?: Json | null
           hide_results?: boolean
           id?: string
           is_assessment?: boolean
