@@ -26,6 +26,8 @@ import {
   CheckCircle2,
   Star,
   MessageSquare,
+  Filter,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
@@ -33,7 +35,17 @@ import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/dashboard/quiz/$quizId/results")({
   head: () => ({ meta: [{ title: "Quiz results — Datapro QuizHub" }] }),
