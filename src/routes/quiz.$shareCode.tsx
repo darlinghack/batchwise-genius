@@ -213,7 +213,7 @@ function PublicQuiz() {
     setSubmitting(true);
     try {
       const payload = questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 }));
-      const isAssessment = !collectFeedback;
+      const isAssessment = !!quiz?.is_assessment;
       const res = await submit({
         data: {
           code: shareCode,
