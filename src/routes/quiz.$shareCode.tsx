@@ -24,6 +24,16 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
+import {
+  normalizeFeedbackForm,
+  GRID4,
+  IMPACT4,
+  PACE,
+  USEFUL,
+  TASKS,
+  FACULTY_ROWS,
+  IMPACT_ROWS,
+} from "@/lib/feedback-form";
 
 export const Route = createFileRoute("/quiz/$shareCode")({
   head: () => ({ meta: [{ title: "Attempt Quiz — Datapro QuizHub" }] }),
@@ -31,36 +41,6 @@ export const Route = createFileRoute("/quiz/$shareCode")({
 });
 
 type Result = Awaited<ReturnType<typeof submitQuiz>>;
-
-// ---- Internship feedback option sets ----
-const SECTIONS = ["CSD", "CSM", "CSE"] as const;
-const GRID4 = [
-  { label: "Excellent", value: 4 },
-  { label: "Good", value: 3 },
-  { label: "Fair", value: 2 },
-  { label: "Poor", value: 1 },
-];
-const IMPACT4 = [
-  { label: "Very Helpful", value: 4 },
-  { label: "Helpful", value: 3 },
-  { label: "Slightly Helpful", value: 2 },
-  { label: "Not Helpful", value: 1 },
-];
-const PACE = ["Too Fast", "Just Right", "Too Slow"];
-const USEFUL = ["Very Useful", "Useful", "Slightly Useful", "Not Useful"];
-const TASKS = ["Yes, all of them", "Most of them", "Some of them", "No, very few/none"];
-const FACULTY_ROWS = [
-  { key: "clarity", label: "Clarity of concepts" },
-  { key: "engagement", label: "Engagement / interaction" },
-  { key: "expertise", label: "Expertise in topics" },
-  { key: "answering", label: "Answering questions effectively" },
-] as const;
-const IMPACT_ROWS = [
-  { key: "clarity", label: "Clarity of concepts" },
-  { key: "relevance", label: "Relevance to job / studies" },
-  { key: "skill", label: "Skill application" },
-  { key: "knowledge", label: "Overall knowledge improvement" },
-] as const;
 
 function ChoiceRow({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (v: string) => void }) {
   return (
@@ -184,10 +164,13 @@ function PublicQuiz() {
   const [orgRating, setOrgRating] = useState(0);
   const [satisfaction, setSatisfaction] = useState(0);
   const [suggestions, setSuggestions] = useState("");
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string | number>>({});
   const startRef = useRef<number>(0);
 
   const quiz = data?.quiz;
   const questions = data?.questions ?? [];
+  const form = normalizeFeedbackForm(data?.feedbackForm ?? null);
+  const collectFeedback = !quiz?.is_assessment && form.enabled;
 
   // restore autosave
   useEffect(() => {
@@ -230,7 +213,7 @@ function PublicQuiz() {
     setSubmitting(true);
     try {
       const payload = questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? -1 }));
-      const isAssessment = !!quiz?.is_assessment;
+      const isAssessment = !collectFeedback;
       const res = await submit({
         data: {
           code: shareCode,
@@ -265,6 +248,7 @@ function PublicQuiz() {
                 organizationRating: orgRating || undefined,
                 satisfactionRating: satisfaction || undefined,
                 suggestions: suggestions.trim() || undefined,
+                customAnswers: Object.keys(customAnswers).length ? customAnswers : undefined,
               },
         },
       });
@@ -379,9 +363,9 @@ function PublicQuiz() {
               </Button>
               {current < questions.length - 1 ? (
                 <Button onClick={() => setCurrent((c) => c + 1)} className="bg-gradient-primary hover:opacity-90">Next <ChevronRight className="h-4 w-4" /></Button>
-              ) : quiz.is_assessment ? (
+              ) : !collectFeedback ? (
                 <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit assessment
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} {quiz.is_assessment ? "Submit assessment" : "Submit quiz"}
                 </Button>
               ) : (
                 <Button onClick={() => setPhase("feedback")} className="bg-gradient-primary hover:opacity-90">
