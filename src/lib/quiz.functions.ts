@@ -145,6 +145,7 @@ const SubmitInput = z.object({
       organizationRating: z.number().int().min(1).max(5).optional(),
       satisfactionRating: z.number().int().min(1).max(5).optional(),
       suggestions: z.string().trim().max(2000).optional(),
+      customAnswers: z.record(z.string().max(80), z.union([z.string().max(2000), z.number()])).optional(),
     })
     .optional(),
 });
@@ -214,7 +215,10 @@ export const submitQuiz = createServerFn({ method: "POST" })
     const fb = data.internshipFeedback;
     if (fb) {
       const hasAny = Object.values(fb).some(
-        (v) => (typeof v === "number" && v > 0) || (typeof v === "string" && v.trim().length > 0),
+        (v) =>
+          (typeof v === "number" && v > 0) ||
+          (typeof v === "string" && v.trim().length > 0) ||
+          (v && typeof v === "object" && Object.keys(v).length > 0),
       );
       if (hasAny) {
         await supabaseAdmin.from("internship_feedback").insert({
@@ -240,6 +244,7 @@ export const submitQuiz = createServerFn({ method: "POST" })
           organization_rating: fb.organizationRating ?? null,
           satisfaction_rating: fb.satisfactionRating ?? null,
           suggestions: fb.suggestions ?? "",
+          custom_answers: fb.customAnswers ?? {},
         });
       }
     }
