@@ -61,14 +61,30 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { data: quiz } = await supabaseAdmin
       .from("quizzes")
-      .select("id, title, topic_name, type, difficulty, duration_minutes, status, num_questions, is_assessment, hide_results")
+      .select("id, title, topic_name, type, difficulty, duration_minutes, status, num_questions, is_assessment, hide_results, feedback_form, batch_id")
       .eq("share_code", data.code)
       .maybeSingle();
 
 
-    if (!quiz) return { quiz: null, questions: [], reason: "not_found" as const };
+    if (!quiz) return { quiz: null, questions: [], feedbackForm: null, reason: "not_found" as const };
     if (quiz.status !== "published")
-      return { quiz: null, questions: [], reason: quiz.status === "closed" ? ("closed" as const) : ("draft" as const) };
+      return {
+        quiz: null,
+        questions: [],
+        feedbackForm: null,
+        reason: quiz.status === "closed" ? ("closed" as const) : ("draft" as const),
+      };
+
+    // Feedback form: quiz-level override → batch default → null (built-in default form).
+    let feedbackForm: unknown = quiz.feedback_form ?? null;
+    if (!feedbackForm && quiz.batch_id) {
+      const { data: batch } = await supabaseAdmin
+        .from("batches")
+        .select("feedback_form")
+        .eq("id", quiz.batch_id)
+        .maybeSingle();
+      feedbackForm = batch?.feedback_form ?? null;
+    }
 
     const { data: questions } = await supabaseAdmin
       .from("questions")
@@ -85,6 +101,7 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
 
     return {
       quiz,
+      feedbackForm,
       questions: shuffled.map((q) => ({
         id: q.id,
         question_text: q.question_text,
@@ -93,6 +110,7 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
       reason: "ok" as const,
     };
   });
+
 
 const SubmitInput = z.object({
   code: z.string().min(1).max(40),
