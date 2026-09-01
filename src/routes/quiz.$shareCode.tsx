@@ -379,95 +379,157 @@ function PublicQuiz() {
 
         {phase === "feedback" && (
           <Card className="p-6 sm:p-8 animate-fade-in-up">
-            <h1 className="text-2xl font-bold tracking-tight">Internship Feedback</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Your feedback on the overall internship helps us improve future sessions. All fields are optional — share what you can.
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">{form.title}</h1>
+            {form.intro && <p className="mt-1 text-sm text-muted-foreground">{form.intro}</p>}
 
-            {/* Quick quiz rating */}
-            <div className="mt-6 rounded-xl border border-border p-4">
-              <Label>Rate this quiz</Label>
-              <div className="mt-2 flex items-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setRating(rating === n ? 0 : n)}
-                    onMouseEnter={() => setHoverRating(n)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    className="transition-transform hover:scale-110"
-                    aria-label={`${n} star${n > 1 ? "s" : ""}`}
-                  >
-                    <Star className={cn("h-7 w-7", (hoverRating || rating) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
-                  </button>
-                ))}
+            {form.sections.quizRating && (
+              <div className="mt-6 rounded-xl border border-border p-4">
+                <Label>Rate this quiz</Label>
+                <div className="mt-2 flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setRating(rating === n ? 0 : n)}
+                      onMouseEnter={() => setHoverRating(n)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="transition-transform hover:scale-110"
+                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                    >
+                      <Star className={cn("h-7 w-7", (hoverRating || rating) >= n ? "fill-warning text-warning" : "text-muted-foreground/40")} />
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 space-y-2">
+                  <Label>Comments about this quiz</Label>
+                  <Textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="What did you like or what could be better?"
+                    rows={3}
+                    maxLength={1000}
+                  />
+                </div>
               </div>
-              <div className="mt-3 space-y-2">
-                <Label>Comments about this quiz</Label>
-                <Textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="What did you like or what could be better?"
-                  rows={3}
-                  maxLength={1000}
-                />
-              </div>
-            </div>
+            )}
 
             <div className="my-6 border-t border-border" />
-            <h2 className="text-lg font-semibold">About the overall internship</h2>
 
             <div className="mt-4 space-y-6">
-              <ChoiceRow label="Your section / branch" options={[...SECTIONS]} value={section} onChange={setSection} />
+              {form.sections.section && (
+                <ChoiceRow label="Your section / branch" options={form.sectionOptions} value={section} onChange={setSection} />
+              )}
 
-              <GridScale
-                title="How would you rate the faculty's teaching quality?"
-                rows={FACULTY_ROWS}
-                options={GRID4}
-                values={faculty}
-                onChange={(k, v) => setFaculty((p) => ({ ...p, [k]: v }))}
-              />
-
-              <ChoiceRow label="How was the pace of teaching?" options={PACE} value={pace} onChange={setPace} />
-              <ChoiceRow label="How useful were the study materials / resources?" options={USEFUL} value={resources} onChange={setResources} />
-              <ChoiceRow label="Were you able to complete the practical tasks and activities?" options={TASKS} value={tasks} onChange={setTasks} />
-              <ChoiceRow label="How useful were the daily quizzes?" options={USEFUL} value={quizUseful} onChange={setQuizUseful} />
-
-              <GridScale
-                title="How helpful were the sessions in improving your knowledge and skills?"
-                rows={IMPACT_ROWS}
-                options={IMPACT4}
-                values={impact}
-                onChange={(k, v) => setImpact((p) => ({ ...p, [k]: v }))}
-              />
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <StarRow label="Overall course rating" value={courseRating} onChange={setCourseRating} />
-                <StarRow label="Overall trainer rating" value={trainerRating} onChange={setTrainerRating} />
-                <StarRow label="Organization & coordination" value={orgRating} onChange={setOrgRating} />
-                <StarRow label="Overall satisfaction" value={satisfaction} onChange={setSatisfaction} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Suggestions or improvements for the sessions / faculty</Label>
-                <Textarea
-                  value={suggestions}
-                  onChange={(e) => setSuggestions(e.target.value)}
-                  placeholder="What would make the internship better?"
-                  rows={4}
-                  maxLength={2000}
+              {form.sections.faculty && (
+                <GridScale
+                  title="How would you rate the faculty's teaching quality?"
+                  rows={FACULTY_ROWS}
+                  options={GRID4}
+                  values={faculty}
+                  onChange={(k, v) => setFaculty((p) => ({ ...p, [k]: v }))}
                 />
-              </div>
+              )}
+
+              {form.sections.pace && <ChoiceRow label="How was the pace of teaching?" options={PACE} value={pace} onChange={setPace} />}
+              {form.sections.resources && <ChoiceRow label="How useful were the study materials / resources?" options={USEFUL} value={resources} onChange={setResources} />}
+              {form.sections.tasks && <ChoiceRow label="Were you able to complete the practical tasks and activities?" options={TASKS} value={tasks} onChange={setTasks} />}
+              {form.sections.quizUseful && <ChoiceRow label="How useful were the daily quizzes?" options={USEFUL} value={quizUseful} onChange={setQuizUseful} />}
+
+              {form.sections.impact && (
+                <GridScale
+                  title="How helpful were the sessions in improving your knowledge and skills?"
+                  rows={IMPACT_ROWS}
+                  options={IMPACT4}
+                  values={impact}
+                  onChange={(k, v) => setImpact((p) => ({ ...p, [k]: v }))}
+                />
+              )}
+
+              {form.sections.overallRatings && (
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <StarRow label="Overall course rating" value={courseRating} onChange={setCourseRating} />
+                  <StarRow label="Overall trainer rating" value={trainerRating} onChange={setTrainerRating} />
+                  <StarRow label="Organization & coordination" value={orgRating} onChange={setOrgRating} />
+                  <StarRow label="Overall satisfaction" value={satisfaction} onChange={setSatisfaction} />
+                </div>
+              )}
+
+              {/* Batch-specific custom questions */}
+              {form.custom.map((f) => {
+                const val = customAnswers[f.label];
+                const set = (v: string | number) =>
+                  setCustomAnswers((p) => {
+                    const next = { ...p };
+                    if (v === "" || v === 0) delete next[f.label];
+                    else next[f.label] = v;
+                    return next;
+                  });
+                const label = f.required ? `${f.label} *` : f.label;
+                if (f.type === "stars") return <StarRow key={f.id} label={label} value={Number(val ?? 0)} onChange={set} />;
+                if (f.type === "choice")
+                  return (
+                    <ChoiceRow
+                      key={f.id}
+                      label={label}
+                      options={f.options?.length ? f.options : ["Yes", "No"]}
+                      value={String(val ?? "")}
+                      onChange={set}
+                    />
+                  );
+                if (f.type === "scale")
+                  return (
+                    <ChoiceRow
+                      key={f.id}
+                      label={label}
+                      options={GRID4.map((g) => g.label)}
+                      value={String(val ?? "")}
+                      onChange={set}
+                    />
+                  );
+                return (
+                  <div key={f.id} className="space-y-2">
+                    <Label>{label}</Label>
+                    <Textarea
+                      value={String(val ?? "")}
+                      onChange={(e) => set(e.target.value)}
+                      rows={3}
+                      maxLength={2000}
+                    />
+                  </div>
+                );
+              })}
+
+              {form.sections.suggestions && (
+                <div className="space-y-2">
+                  <Label>Suggestions or improvements for the sessions / faculty</Label>
+                  <Textarea
+                    value={suggestions}
+                    onChange={(e) => setSuggestions(e.target.value)}
+                    placeholder="What would make the internship better?"
+                    rows={4}
+                    maxLength={2000}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="mt-8 flex items-center justify-end gap-2">
               <Button variant="ghost" onClick={handleSubmit} disabled={submitting}>Skip</Button>
-              <Button onClick={handleSubmit} disabled={submitting} className="bg-gradient-primary hover:opacity-90">
+              <Button
+                onClick={() => {
+                  const missing = form.custom.find((f) => f.required && !customAnswers[f.label]);
+                  if (missing) return toast.error(`Please answer: ${missing.label}`);
+                  handleSubmit();
+                }}
+                disabled={submitting}
+                className="bg-gradient-primary hover:opacity-90"
+              >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trophy className="h-4 w-4" />} Submit
               </Button>
             </div>
           </Card>
         )}
+
 
         {phase === "result" && result?.hidden && (
           <Card className="p-8 text-center animate-fade-in-up">
