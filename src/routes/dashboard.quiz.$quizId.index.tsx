@@ -15,6 +15,7 @@ import {
   QrCode,
   Save,
   BarChart3,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -24,6 +25,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { FeedbackFormBuilder } from "@/components/FeedbackFormBuilder";
+import { normalizeFeedbackForm, type FeedbackFormConfig } from "@/lib/feedback-form";
 
 export const Route = createFileRoute("/dashboard/quiz/$quizId/")({
   head: () => ({ meta: [{ title: "Edit quiz — Datapro QuizHub" }] }),
@@ -46,6 +49,8 @@ function QuizEditor() {
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [fbForm, setFbForm] = useState<FeedbackFormConfig | null>(null);
+  const [savingForm, setSavingForm] = useState(false);
 
   const { data: quiz, isLoading } = useQuery({
     queryKey: ["quiz", quizId],
@@ -84,6 +89,38 @@ function QuizEditor() {
   useEffect(() => {
     if (quiz?.title) setTitle(quiz.title);
   }, [quiz?.title]);
+
+  const { data: batch } = useQuery({
+    queryKey: ["quiz-batch-feedback", quiz?.batch_id],
+    enabled: !!quiz?.batch_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("batches")
+        .select("id, name, feedback_form")
+        .eq("id", quiz!.batch_id!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const inheriting = !!quiz && !quiz.feedback_form;
+
+  useEffect(() => {
+    if (!quiz) return;
+    setFbForm(normalizeFeedbackForm(quiz.feedback_form ?? batch?.feedback_form ?? null));
+  }, [quiz, batch?.feedback_form]);
+
+  async function saveFeedbackForm(reset = false) {
+    setSavingForm(true);
+    const { error } = await supabase
+      .from("quizzes")
+      .update({ feedback_form: reset ? null : (fbForm as unknown as never) })
+      .eq("id", quizId);
+    setSavingForm(false);
+    if (error) return toast.error(error.message);
+    toast.success(reset ? "Reverted to the batch / default form." : "Feedback form saved!");
+    qc.invalidateQueries({ queryKey: ["quiz", quizId] });
+  }
 
   const shareUrl =
     typeof window !== "undefined" && quiz ? `${window.location.origin}/quiz/${quiz.share_code}` : "";
@@ -247,6 +284,36 @@ function QuizEditor() {
                 </a>
               </Button>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {!quiz.is_assessment && fbForm && (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 font-semibold">
+                <MessageSquare className="h-4 w-4 text-primary" /> Feedback form
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {inheriting
+                  ? `Currently using ${batch?.feedback_form ? `the "${batch.name}" batch form` : "the default form"}. Edit and save to customise it for this quiz only.`
+                  : "This quiz uses its own customised feedback form."}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {!inheriting && (
+                <Button variant="ghost" onClick={() => saveFeedbackForm(true)} disabled={savingForm}>
+                  Use batch / default
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => saveFeedbackForm(false)} disabled={savingForm}>
+                {savingForm ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save form
+              </Button>
+            </div>
+          </div>
+          <div className="mt-5">
+            <FeedbackFormBuilder value={fbForm} onChange={setFbForm} />
           </div>
         </Card>
       )}
