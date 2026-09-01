@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -28,6 +28,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FeedbackFormBuilder } from "@/components/FeedbackFormBuilder";
+import { normalizeFeedbackForm, type FeedbackFormConfig } from "@/lib/feedback-form";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +74,8 @@ function BatchDetail() {
   const [selected, setSelected] = useState<string[]>([]);
   const [weekendOpen, setWeekendOpen] = useState(false);
   const [weekendGen, setWeekendGen] = useState(false);
+  const [feedbackForm, setFeedbackForm] = useState<FeedbackFormConfig | null>(null);
+  const [savingFeedback, setSavingFeedback] = useState(false);
 
   const { data: batch } = useQuery({
     queryKey: ["batch", batchId],
@@ -80,6 +84,23 @@ function BatchDetail() {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (batch) setFeedbackForm(normalizeFeedbackForm(batch.feedback_form ?? null));
+  }, [batch?.id, batch?.feedback_form]);
+
+  async function saveBatchFeedbackForm() {
+    if (!feedbackForm) return;
+    setSavingFeedback(true);
+    const { error } = await supabase
+      .from("batches")
+      .update({ feedback_form: feedbackForm as unknown as never })
+      .eq("id", batchId);
+    setSavingFeedback(false);
+    if (error) return toast.error(error.message);
+    toast.success("Batch feedback form saved!");
+    qc.invalidateQueries({ queryKey: ["batch", batchId] });
+  }
 
   const { data: topics, isLoading } = useQuery({
     queryKey: ["topics", batchId],
@@ -269,6 +290,25 @@ function BatchDetail() {
           )}
         </div>
       </Card>
+
+      {feedbackForm && (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Batch feedback form</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This is the default form for quizzes in this batch. A quiz can override it from its editor.
+              </p>
+            </div>
+            <Button variant="outline" onClick={saveBatchFeedbackForm} disabled={savingFeedback}>
+              {savingFeedback ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Save form
+            </Button>
+          </div>
+          <div className="mt-5">
+            <FeedbackFormBuilder value={feedbackForm} onChange={setFeedbackForm} />
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">

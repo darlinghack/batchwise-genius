@@ -456,12 +456,12 @@ function PublicQuiz() {
 
               {/* Batch-specific custom questions */}
               {form.custom.map((f) => {
-                const val = customAnswers[f.label];
+                const val = customAnswers[f.id];
                 const set = (v: string | number) =>
                   setCustomAnswers((p) => {
                     const next = { ...p };
-                    if (v === "" || v === 0) delete next[f.label];
-                    else next[f.label] = v;
+                    if (v === "" || v === 0) delete next[f.id];
+                    else next[f.id] = v;
                     return next;
                   });
                 const label = f.required ? `${f.label} *` : f.label;
