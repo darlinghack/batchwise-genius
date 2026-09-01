@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
 import { chatJSON } from "./ai.server";
 
 export interface GeneratedQuestion {
@@ -76,7 +77,7 @@ export const getPublicQuiz = createServerFn({ method: "GET" })
       };
 
     // Feedback form: quiz-level override → batch default → null (built-in default form).
-    let feedbackForm: unknown = quiz.feedback_form ?? null;
+    let feedbackForm: Json | null = quiz.feedback_form ?? null;
     if (!feedbackForm && quiz.batch_id) {
       const { data: batch } = await supabaseAdmin
         .from("batches")
