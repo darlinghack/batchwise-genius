@@ -399,6 +399,48 @@ function BatchAnalytics() {
                 </div>
               )}
             </div>
+
+            {customStats.length > 0 && (
+              <div>
+                <p className="mb-3 text-sm font-semibold">Custom questions</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {customStats.map((f) => (
+                    <div key={f.id} className="rounded-xl border border-border p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium">{f.label}</p>
+                        <Badge variant="secondary">{f.responses}</Badge>
+                      </div>
+                      {f.avg > 0 && (
+                        <p className="mt-2 text-sm text-muted-foreground">Average: <span className="font-semibold text-foreground">{f.avg}</span></p>
+                      )}
+                      {f.dist.length > 0 && f.type !== "text" && (
+                        <div className="mt-2 space-y-1.5">
+                          {f.dist.map((d) => {
+                            const pct = f.responses ? Math.round((d.count / f.responses) * 100) : 0;
+                            return (
+                              <div key={d.label} className="text-xs">
+                                <div className="flex justify-between text-muted-foreground"><span className="truncate">{d.label}</span><span>{d.count}</span></div>
+                                <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                  <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {f.type === "text" && f.texts.length > 0 && (
+                        <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto">
+                          {f.texts.map((t, i) => (
+                            <li key={i} className="rounded-md bg-accent/40 p-2 text-xs text-muted-foreground">{t}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </Card>
