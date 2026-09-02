@@ -109,6 +109,80 @@ export function FeedbackResponses({ quizId }: { quizId: string }) {
   const form = data?.form;
   const customFields = useMemo(() => form?.custom ?? [], [form]);
 
+  const stats = useMemo(() => {
+    if (rows.length === 0) return null;
+    const avg = (key: keyof FeedbackRow) => {
+      const vals = rows
+        .map((r) => r[key] as number | null)
+        .filter((v): v is number => typeof v === "number" && v > 0);
+      if (vals.length === 0) return null;
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    };
+    const dist = (key: keyof FeedbackRow) => {
+      const counts = new Map<string, number>();
+      rows.forEach((r) => {
+        const v = r[key] as string | null;
+        if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+      });
+      return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    };
+    return {
+      overall: [
+        { label: "Course", value: avg("course_rating") },
+        { label: "Trainer", value: avg("trainer_rating") },
+        { label: "Organization", value: avg("organization_rating") },
+        { label: "Satisfaction", value: avg("satisfaction_rating") },
+      ],
+      faculty: FACULTY_ROWS.map((f) => ({
+        label: f.label,
+        value: avg(`faculty_${f.key}` as keyof FeedbackRow),
+        max: 4,
+      })),
+      impact: IMPACT_ROWS.map((f) => ({
+        label: f.label,
+        value: avg(`impact_${f.key}` as keyof FeedbackRow),
+        max: 4,
+      })),
+      choices: [
+        { label: "Pace of teaching", items: dist("teaching_pace") },
+        { label: "Study materials", items: dist("resources_usefulness") },
+        { label: "Practical tasks", items: dist("task_completion") },
+        { label: "Daily quizzes", items: dist("quizzes_usefulness") },
+      ].filter((c) => c.items.length > 0),
+      custom: customFields.map((f) => {
+        const vals = rows
+          .map((r) => r.custom_answers?.[f.id])
+          .filter((v) => v !== undefined && v !== "");
+        if (f.type === "stars" || f.type === "scale") {
+          const nums = vals.map(Number).filter((n) => !Number.isNaN(n));
+          return {
+            id: f.id,
+            label: f.label,
+            type: "numeric" as const,
+            value: nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null,
+            count: nums.length,
+            items: [] as [string, number][],
+          };
+        }
+        const counts = new Map<string, number>();
+        vals.forEach((v) => {
+          const s = String(v);
+          counts.set(s, (counts.get(s) ?? 0) + 1);
+        });
+        return {
+          id: f.id,
+          label: f.label,
+          type: (f.type === "text" ? "text" : "choice") as "text" | "choice",
+          value: null,
+          count: vals.length,
+          items: [...counts.entries()].sort((a, b) => b[1] - a[1]),
+        };
+      }),
+      suggestionCount: rows.filter((r) => r.suggestions?.trim()).length,
+    };
+  }, [rows, customFields]);
+
+
   return (
     <Card className="p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
@@ -127,6 +201,91 @@ export function FeedbackResponses({ quizId }: { quizId: string }) {
           No detailed feedback submitted for this quiz yet.
         </p>
       ) : (
+        <>
+          {stats && (
+            <div className="mb-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {stats.overall.map((s) => (
+                  <div key={s.label} className="rounded-lg border border-border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="mt-0.5 flex items-center gap-1 text-lg font-semibold">
+                      {s.value === null ? "—" : s.value.toFixed(1)}
+                      {s.value !== null && (
+                        <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                      )}
+                      {s.value !== null && (
+                        <span className="text-xs font-normal text-muted-foreground">/5</span>
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <StatGroup title="Faculty averages" items={stats.faculty} />
+                <StatGroup title="Knowledge &amp; skill impact averages" items={stats.impact} />
+              </div>
+
+              {stats.choices.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {stats.choices.map((c) => (
+                    <div key={c.label} className="rounded-lg border border-border p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {c.label}
+                      </p>
+                      {c.items.map(([label, count]) => (
+                        <DistBar
+                          key={label}
+                          label={label}
+                          count={count}
+                          total={rows.length}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stats.custom.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {stats.custom.map((c) => (
+                    <div key={c.id} className="rounded-lg border border-border p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {c.label}
+                      </p>
+                      {c.type === "numeric" ? (
+                        <p className="text-lg font-semibold">
+                          {c.value === null ? "—" : c.value.toFixed(1)}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            avg · {c.count} responses
+                          </span>
+                        </p>
+                      ) : c.type === "text" ? (
+                        <p className="text-sm text-muted-foreground">
+                          {c.count} text {c.count === 1 ? "response" : "responses"} — open a
+                          respondent to read
+                        </p>
+                      ) : (
+                        c.items.map(([label, count]) => (
+                          <DistBar
+                            key={label}
+                            label={label}
+                            count={count}
+                            total={rows.length}
+                          />
+                        ))
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                {stats.suggestionCount} of {rows.length} respondents left written suggestions.
+              </p>
+            </div>
+          )}
+
         <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
           {rows.map((r) => (
             <button
