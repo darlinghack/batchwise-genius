@@ -557,6 +557,8 @@ function QuizResults() {
           </div>
         )}
       </Card>
+
+      <FeedbackResponses quizId={quizId} />
     </div>
   );
 }
