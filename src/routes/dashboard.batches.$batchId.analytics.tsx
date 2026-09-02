@@ -30,6 +30,8 @@ import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { normalizeFeedbackForm } from "@/lib/feedback-form";
+
 
 export const Route = createFileRoute("/dashboard/batches/$batchId/analytics")({
   head: () => ({ meta: [{ title: "Batch analytics — Datapro QuizHub" }] }),
