@@ -30,6 +30,8 @@ import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { normalizeFeedbackForm } from "@/lib/feedback-form";
+
 
 export const Route = createFileRoute("/dashboard/batches/$batchId/analytics")({
   head: () => ({ meta: [{ title: "Batch analytics — Datapro QuizHub" }] }),
@@ -57,6 +59,7 @@ interface Feedback {
   suggestions: string | null;
   student_name: string | null;
   created_at: string;
+  custom_answers: Record<string, string | number> | null;
 }
 
 function BatchAnalytics() {
@@ -68,10 +71,10 @@ function BatchAnalytics() {
   const { data, isLoading } = useQuery({
     queryKey: ["batch-analytics", batchId],
     queryFn: async () => {
-      const { data: batch } = await supabase.from("batches").select("name, course_name").eq("id", batchId).maybeSingle();
+      const { data: batch } = await supabase.from("batches").select("name, course_name, feedback_form").eq("id", batchId).maybeSingle();
       const { data: quizzes } = await supabase
         .from("quizzes")
-        .select("id, title, status, type")
+        .select("id, title, status, type, feedback_form")
         .eq("batch_id", batchId)
         .order("created_at", { ascending: false });
       const quizIds = (quizzes ?? []).map((q) => q.id);
@@ -86,7 +89,7 @@ function BatchAnalytics() {
         const { data: f } = await supabase
           .from("internship_feedback")
           .select(
-            "section, faculty_clarity, faculty_engagement, faculty_expertise, faculty_answering, teaching_pace, resources_usefulness, task_completion, quizzes_usefulness, impact_clarity, impact_relevance, impact_skill, impact_knowledge, course_rating, trainer_rating, organization_rating, satisfaction_rating, suggestions, student_name, created_at",
+            "section, faculty_clarity, faculty_engagement, faculty_expertise, faculty_answering, teaching_pace, resources_usefulness, task_completion, quizzes_usefulness, impact_clarity, impact_relevance, impact_skill, impact_knowledge, course_rating, trainer_rating, organization_rating, satisfaction_rating, suggestions, student_name, created_at, custom_answers",
           )
           .in("quiz_id", quizIds)
           .order("created_at", { ascending: false });
@@ -95,6 +98,7 @@ function BatchAnalytics() {
       return { batch, quizzes: quizzes ?? [], subs, feedback };
     },
   });
+
 
   const batch = data?.batch;
   const quizzes = data?.quizzes ?? [];
@@ -158,6 +162,38 @@ function BatchAnalytics() {
   const tasksDist = distOf("task_completion", ["Yes, all of them", "Most of them", "Some of them", "No, very few/none"]);
   const quizzesDist = distOf("quizzes_usefulness", ["Very Useful", "Useful", "Slightly Useful", "Not Useful"]);
   const comments = feedback.filter((f) => (f.suggestions ?? "").trim().length > 0);
+
+  // ---- custom feedback questions (from quiz overrides + batch default) ----
+  const customFields = (() => {
+    const map = new Map<string, { id: string; label: string; type: string }>();
+    const forms = [
+      normalizeFeedbackForm(batch?.feedback_form ?? null),
+      ...quizzes.map((q) => normalizeFeedbackForm((q as { feedback_form?: unknown }).feedback_form ?? null)),
+    ];
+    forms.forEach((f) => f.custom.forEach((c) => map.set(c.id, { id: c.id, label: c.label, type: c.type })));
+    return [...map.values()];
+  })();
+
+  const customStats = customFields
+    .map((f) => {
+      const answers = feedback
+        .map((fb) => fb.custom_answers?.[f.id])
+        .filter((v): v is string | number => v !== undefined && v !== null && v !== "");
+      if (!answers.length) return null;
+      const nums = answers.filter((v): v is number => typeof v === "number");
+      const texts = answers.filter((v): v is string => typeof v === "string");
+      const counts = new Map<string, number>();
+      texts.forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
+      return {
+        ...f,
+        responses: answers.length,
+        avg: nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10 : 0,
+        texts,
+        dist: [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count),
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => !!x);
+
 
   async function generateInsight() {
     setLoadingInsight(true);
@@ -363,6 +399,48 @@ function BatchAnalytics() {
                 </div>
               )}
             </div>
+
+            {customStats.length > 0 && (
+              <div>
+                <p className="mb-3 text-sm font-semibold">Custom questions</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {customStats.map((f) => (
+                    <div key={f.id} className="rounded-xl border border-border p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium">{f.label}</p>
+                        <Badge variant="secondary">{f.responses}</Badge>
+                      </div>
+                      {f.avg > 0 && (
+                        <p className="mt-2 text-sm text-muted-foreground">Average: <span className="font-semibold text-foreground">{f.avg}</span></p>
+                      )}
+                      {f.dist.length > 0 && f.type !== "text" && (
+                        <div className="mt-2 space-y-1.5">
+                          {f.dist.map((d) => {
+                            const pct = f.responses ? Math.round((d.count / f.responses) * 100) : 0;
+                            return (
+                              <div key={d.label} className="text-xs">
+                                <div className="flex justify-between text-muted-foreground"><span className="truncate">{d.label}</span><span>{d.count}</span></div>
+                                <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                  <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {f.type === "text" && f.texts.length > 0 && (
+                        <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto">
+                          {f.texts.map((t, i) => (
+                            <li key={i} className="rounded-md bg-accent/40 p-2 text-xs text-muted-foreground">{t}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </Card>
