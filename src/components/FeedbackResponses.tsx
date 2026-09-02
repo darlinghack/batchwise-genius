@@ -201,6 +201,91 @@ export function FeedbackResponses({ quizId }: { quizId: string }) {
           No detailed feedback submitted for this quiz yet.
         </p>
       ) : (
+        <>
+          {stats && (
+            <div className="mb-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {stats.overall.map((s) => (
+                  <div key={s.label} className="rounded-lg border border-border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="mt-0.5 flex items-center gap-1 text-lg font-semibold">
+                      {s.value === null ? "—" : s.value.toFixed(1)}
+                      {s.value !== null && (
+                        <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                      )}
+                      {s.value !== null && (
+                        <span className="text-xs font-normal text-muted-foreground">/5</span>
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <StatGroup title="Faculty averages" items={stats.faculty} />
+                <StatGroup title="Knowledge &amp; skill impact averages" items={stats.impact} />
+              </div>
+
+              {stats.choices.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {stats.choices.map((c) => (
+                    <div key={c.label} className="rounded-lg border border-border p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {c.label}
+                      </p>
+                      {c.items.map(([label, count]) => (
+                        <DistBar
+                          key={label}
+                          label={label}
+                          count={count}
+                          total={rows.length}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {stats.custom.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {stats.custom.map((c) => (
+                    <div key={c.id} className="rounded-lg border border-border p-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {c.label}
+                      </p>
+                      {c.type === "numeric" ? (
+                        <p className="text-lg font-semibold">
+                          {c.value === null ? "—" : c.value.toFixed(1)}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            avg · {c.count} responses
+                          </span>
+                        </p>
+                      ) : c.type === "text" ? (
+                        <p className="text-sm text-muted-foreground">
+                          {c.count} text {c.count === 1 ? "response" : "responses"} — open a
+                          respondent to read
+                        </p>
+                      ) : (
+                        c.items.map(([label, count]) => (
+                          <DistBar
+                            key={label}
+                            label={label}
+                            count={count}
+                            total={rows.length}
+                          />
+                        ))
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                {stats.suggestionCount} of {rows.length} respondents left written suggestions.
+              </p>
+            </div>
+          )}
+
         <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
           {rows.map((r) => (
             <button
