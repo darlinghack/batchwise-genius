@@ -57,6 +57,7 @@ interface Feedback {
   suggestions: string | null;
   student_name: string | null;
   created_at: string;
+  custom_answers: Record<string, string | number> | null;
 }
 
 function BatchAnalytics() {
@@ -68,10 +69,10 @@ function BatchAnalytics() {
   const { data, isLoading } = useQuery({
     queryKey: ["batch-analytics", batchId],
     queryFn: async () => {
-      const { data: batch } = await supabase.from("batches").select("name, course_name").eq("id", batchId).maybeSingle();
+      const { data: batch } = await supabase.from("batches").select("name, course_name, feedback_form").eq("id", batchId).maybeSingle();
       const { data: quizzes } = await supabase
         .from("quizzes")
-        .select("id, title, status, type")
+        .select("id, title, status, type, feedback_form")
         .eq("batch_id", batchId)
         .order("created_at", { ascending: false });
       const quizIds = (quizzes ?? []).map((q) => q.id);
@@ -86,7 +87,7 @@ function BatchAnalytics() {
         const { data: f } = await supabase
           .from("internship_feedback")
           .select(
-            "section, faculty_clarity, faculty_engagement, faculty_expertise, faculty_answering, teaching_pace, resources_usefulness, task_completion, quizzes_usefulness, impact_clarity, impact_relevance, impact_skill, impact_knowledge, course_rating, trainer_rating, organization_rating, satisfaction_rating, suggestions, student_name, created_at",
+            "section, faculty_clarity, faculty_engagement, faculty_expertise, faculty_answering, teaching_pace, resources_usefulness, task_completion, quizzes_usefulness, impact_clarity, impact_relevance, impact_skill, impact_knowledge, course_rating, trainer_rating, organization_rating, satisfaction_rating, suggestions, student_name, created_at, custom_answers",
           )
           .in("quiz_id", quizIds)
           .order("created_at", { ascending: false });
@@ -95,6 +96,7 @@ function BatchAnalytics() {
       return { batch, quizzes: quizzes ?? [], subs, feedback };
     },
   });
+
 
   const batch = data?.batch;
   const quizzes = data?.quizzes ?? [];
