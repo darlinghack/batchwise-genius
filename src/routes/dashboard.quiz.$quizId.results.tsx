@@ -32,6 +32,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getBatchInsight } from "@/lib/quiz.functions";
 import { StatCard } from "@/components/StatCard";
+import { FeedbackResponses } from "@/components/FeedbackResponses";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
