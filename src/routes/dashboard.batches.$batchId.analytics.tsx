@@ -161,6 +161,38 @@ function BatchAnalytics() {
   const quizzesDist = distOf("quizzes_usefulness", ["Very Useful", "Useful", "Slightly Useful", "Not Useful"]);
   const comments = feedback.filter((f) => (f.suggestions ?? "").trim().length > 0);
 
+  // ---- custom feedback questions (from quiz overrides + batch default) ----
+  const customFields = (() => {
+    const map = new Map<string, { id: string; label: string; type: string }>();
+    const forms = [
+      normalizeFeedbackForm(batch?.feedback_form ?? null),
+      ...quizzes.map((q) => normalizeFeedbackForm((q as { feedback_form?: unknown }).feedback_form ?? null)),
+    ];
+    forms.forEach((f) => f.custom.forEach((c) => map.set(c.id, { id: c.id, label: c.label, type: c.type })));
+    return [...map.values()];
+  })();
+
+  const customStats = customFields
+    .map((f) => {
+      const answers = feedback
+        .map((fb) => fb.custom_answers?.[f.id])
+        .filter((v): v is string | number => v !== undefined && v !== null && v !== "");
+      if (!answers.length) return null;
+      const nums = answers.filter((v): v is number => typeof v === "number");
+      const texts = answers.filter((v): v is string => typeof v === "string");
+      const counts = new Map<string, number>();
+      texts.forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
+      return {
+        ...f,
+        responses: answers.length,
+        avg: nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 10) / 10 : 0,
+        texts,
+        dist: [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count),
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => !!x);
+
+
   async function generateInsight() {
     setLoadingInsight(true);
     const ctx = `Batch "${batch?.name}" (${batch?.course_name}). Quizzes: ${quizzes.length}. Attempts: ${attempts}. Average: ${avg}%. Pass rate: ${passPct}%. Per-quiz averages: ${perQuiz.map((p) => `${p.title}=${p.avg}%`).join(", ")}.`;
