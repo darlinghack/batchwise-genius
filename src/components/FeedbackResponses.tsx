@@ -109,6 +109,80 @@ export function FeedbackResponses({ quizId }: { quizId: string }) {
   const form = data?.form;
   const customFields = useMemo(() => form?.custom ?? [], [form]);
 
+  const stats = useMemo(() => {
+    if (rows.length === 0) return null;
+    const avg = (key: keyof FeedbackRow) => {
+      const vals = rows
+        .map((r) => r[key] as number | null)
+        .filter((v): v is number => typeof v === "number" && v > 0);
+      if (vals.length === 0) return null;
+      return vals.reduce((a, b) => a + b, 0) / vals.length;
+    };
+    const dist = (key: keyof FeedbackRow) => {
+      const counts = new Map<string, number>();
+      rows.forEach((r) => {
+        const v = r[key] as string | null;
+        if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+      });
+      return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    };
+    return {
+      overall: [
+        { label: "Course", value: avg("course_rating") },
+        { label: "Trainer", value: avg("trainer_rating") },
+        { label: "Organization", value: avg("organization_rating") },
+        { label: "Satisfaction", value: avg("satisfaction_rating") },
+      ],
+      faculty: FACULTY_ROWS.map((f) => ({
+        label: f.label,
+        value: avg(`faculty_${f.key}` as keyof FeedbackRow),
+        max: 4,
+      })),
+      impact: IMPACT_ROWS.map((f) => ({
+        label: f.label,
+        value: avg(`impact_${f.key}` as keyof FeedbackRow),
+        max: 4,
+      })),
+      choices: [
+        { label: "Pace of teaching", items: dist("teaching_pace") },
+        { label: "Study materials", items: dist("resources_usefulness") },
+        { label: "Practical tasks", items: dist("task_completion") },
+        { label: "Daily quizzes", items: dist("quizzes_usefulness") },
+      ].filter((c) => c.items.length > 0),
+      custom: customFields.map((f) => {
+        const vals = rows
+          .map((r) => r.custom_answers?.[f.id])
+          .filter((v) => v !== undefined && v !== "");
+        if (f.type === "stars" || f.type === "scale") {
+          const nums = vals.map(Number).filter((n) => !Number.isNaN(n));
+          return {
+            id: f.id,
+            label: f.label,
+            type: "numeric" as const,
+            value: nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null,
+            count: nums.length,
+            items: [] as [string, number][],
+          };
+        }
+        const counts = new Map<string, number>();
+        vals.forEach((v) => {
+          const s = String(v);
+          counts.set(s, (counts.get(s) ?? 0) + 1);
+        });
+        return {
+          id: f.id,
+          label: f.label,
+          type: (f.type === "text" ? "text" : "choice") as "text" | "choice",
+          value: null,
+          count: vals.length,
+          items: [...counts.entries()].sort((a, b) => b[1] - a[1]),
+        };
+      }),
+      suggestionCount: rows.filter((r) => r.suggestions?.trim()).length,
+    };
+  }, [rows, customFields]);
+
+
   return (
     <Card className="p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
