@@ -69,6 +69,55 @@ function Stars({ v }: { v: number | null }) {
   );
 }
 
+function StatGroup({
+  title,
+  items,
+}: {
+  title: string;
+  items: { label: string; value: number | null; max: number }[];
+}) {
+  return (
+    <div className="rounded-lg border border-border p-3">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <div className="space-y-2">
+        {items.map((it) => (
+          <div key={it.label} className="flex items-center gap-2 text-sm">
+            <span className="min-w-0 flex-1 truncate text-muted-foreground">{it.label}</span>
+            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+              {it.value !== null && (
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${Math.min(100, (it.value / it.max) * 100)}%` }}
+                />
+              )}
+            </div>
+            <span className="w-8 text-right font-medium">
+              {it.value === null ? "—" : it.value.toFixed(1)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DistBar({ label, count, total }: { label: string; count: number; total: number }) {
+  const pct = total > 0 ? (count / total) * 100 : 0;
+  return (
+    <div className="mb-1.5 flex items-center gap-2 text-sm last:mb-0">
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="w-14 shrink-0 text-right text-xs text-muted-foreground">
+        {count} ({Math.round(pct)}%)
+      </span>
+    </div>
+  );
+}
+
 export function FeedbackResponses({ quizId }: { quizId: string }) {
   const [open, setOpen] = useState<FeedbackRow | null>(null);
 
@@ -308,6 +357,7 @@ export function FeedbackResponses({ quizId }: { quizId: string }) {
             </button>
           ))}
         </div>
+        </>
       )}
 
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
