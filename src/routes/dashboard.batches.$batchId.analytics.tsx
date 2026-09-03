@@ -64,9 +64,12 @@ interface Feedback {
 
 function BatchAnalytics() {
   const { batchId } = Route.useParams();
-  const insightFn = useServerFn(getBatchInsight);
-  const [insight, setInsight] = useState("");
+  const reportFn = useServerFn(getBatchInsightReport);
+  const [report, setReport] = useState<BatchInsightReport | null>(null);
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [prompt, setPrompt] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["batch-analytics", batchId],
