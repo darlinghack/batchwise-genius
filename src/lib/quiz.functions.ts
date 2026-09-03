@@ -336,3 +336,192 @@ export const getBatchInsight = createServerFn({ method: "POST" })
       return { insight: "", error: e instanceof Error ? e.message : "AI unavailable" };
     }
   });
+// ---- Batch insight report (prompt-driven) ----
+const BatchReportInput = z.object({
+  batchId: z.string().uuid(),
+  prompt: z.string().trim().max(1000).optional().default(""),
+});
+
+export interface BatchInsightReport {
+  headline: string;
+  answer: string;
+  keyFindings: string[];
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  topPerformers: { name: string; avg: number; attempts: number }[];
+  weakTopics: { topic: string; accuracy: number; questions: number }[];
+  weakQuestions: { question: string; accuracy: number; quiz: string }[];
+  stats: { quizzes: number; attempts: number; students: number; avg: number; passRate: number };
+  generatedAt: string;
+  batchName: string;
+}
+
+export const getBatchInsightReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => BatchReportInput.parse(d))
+  .handler(async ({ data, context }): Promise<BatchInsightReport> => {
+    const { data: batch } = await supabaseAdmin
+      .from("batches")
+      .select("id, name, course_name, trainer_id")
+      .eq("id", data.batchId)
+      .maybeSingle();
+    if (!batch) throw new Error("Batch not found.");
+
+    const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", context.userId);
+    const isSuperAdmin = (roles ?? []).some((r) => r.role === "super_admin");
+    if (batch.trainer_id !== context.userId && !isSuperAdmin) {
+      throw new Error("You do not have permission to view this batch.");
+    }
+
+    const { data: quizzes } = await supabaseAdmin
+      .from("quizzes")
+      .select("id, title, topic_name, difficulty, status")
+      .eq("batch_id", data.batchId);
+    const quizList = quizzes ?? [];
+    const quizIds = quizList.map((q) => q.id);
+
+    let subs: { quiz_id: string; student_name: string; student_email: string; percentage: number; answers: unknown }[] = [];
+    let questions: { id: string; quiz_id: string; question_text: string; correct_index: number }[] = [];
+    if (quizIds.length) {
+      const { data: s } = await supabaseAdmin
+        .from("submissions")
+        .select("quiz_id, student_name, student_email, percentage, answers")
+        .in("quiz_id", quizIds);
+      subs = (s as typeof subs) ?? [];
+      const { data: q } = await supabaseAdmin
+        .from("questions")
+        .select("id, quiz_id, question_text, correct_index")
+        .in("quiz_id", quizIds);
+      questions = (q as typeof questions) ?? [];
+    }
+
+    const attempts = subs.length;
+    const avg = attempts ? Math.round(subs.reduce((a, s) => a + Number(s.percentage), 0) / attempts) : 0;
+    const passRate = attempts
+      ? Math.round((subs.filter((s) => Number(s.percentage) >= 60).length / attempts) * 100)
+      : 0;
+
+    // students
+    const byStudent = new Map<string, { name: string; total: number; count: number }>();
+    subs.forEach((s) => {
+      const key = (s.student_email || s.student_name || "").toLowerCase();
+      const cur = byStudent.get(key) ?? { name: s.student_name, total: 0, count: 0 };
+      cur.total += Number(s.percentage);
+      cur.count += 1;
+      byStudent.set(key, cur);
+    });
+    const ranked = [...byStudent.values()]
+      .map((s) => ({ name: s.name, avg: Math.round(s.total / s.count), attempts: s.count }))
+      .sort((a, b) => b.avg - a.avg);
+    const topPerformers = ranked.slice(0, 10);
+    const strugglers = [...ranked].reverse().slice(0, 5);
+
+    // question-level accuracy
+    const qMap = new Map(questions.map((q) => [q.id, q]));
+    const qStats = new Map<string, { correct: number; total: number }>();
+    subs.forEach((s) => {
+      const ans = Array.isArray(s.answers) ? (s.answers as { questionId?: string; selected?: number }[]) : [];
+      ans.forEach((a) => {
+        if (!a?.questionId) return;
+        const q = qMap.get(a.questionId);
+        if (!q) return;
+        const cur = qStats.get(a.questionId) ?? { correct: 0, total: 0 };
+        cur.total += 1;
+        if (Number(a.selected) === q.correct_index) cur.correct += 1;
+        qStats.set(a.questionId, cur);
+      });
+    });
+
+    const quizTitle = new Map(quizList.map((q) => [q.id, q.title]));
+    const quizTopic = new Map(quizList.map((q) => [q.id, q.topic_name || q.title]));
+
+    const weakQuestions = [...qStats.entries()]
+      .map(([id, v]) => {
+        const q = qMap.get(id)!;
+        return {
+          question: q.question_text.slice(0, 180),
+          accuracy: Math.round((v.correct / Math.max(1, v.total)) * 100),
+          quiz: quizTitle.get(q.quiz_id) ?? "",
+        };
+      })
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 10);
+
+    const topicAgg = new Map<string, { correct: number; total: number; questions: Set<string> }>();
+    [...qStats.entries()].forEach(([id, v]) => {
+      const q = qMap.get(id)!;
+      const topic = quizTopic.get(q.quiz_id) ?? "General";
+      const cur = topicAgg.get(topic) ?? { correct: 0, total: 0, questions: new Set<string>() };
+      cur.correct += v.correct;
+      cur.total += v.total;
+      cur.questions.add(id);
+      topicAgg.set(topic, cur);
+    });
+    const topicStats = [...topicAgg.entries()]
+      .map(([topic, v]) => ({
+        topic,
+        accuracy: Math.round((v.correct / Math.max(1, v.total)) * 100),
+        questions: v.questions.size,
+      }))
+      .sort((a, b) => a.accuracy - b.accuracy);
+    const weakTopics = topicStats.slice(0, 8);
+
+    const perQuiz = quizList.map((q) => {
+      const qs = subs.filter((s) => s.quiz_id === q.id);
+      return {
+        title: q.title,
+        topic: q.topic_name,
+        attempts: qs.length,
+        avg: qs.length ? Math.round(qs.reduce((x, s) => x + Number(s.percentage), 0) / qs.length) : 0,
+      };
+    });
+
+    const factSheet = `Batch: "${batch.name}" (course: ${batch.course_name})
+Quizzes: ${quizList.length}; Submissions: ${attempts}; Unique students: ${ranked.length}; Average score: ${avg}%; Pass rate (>=60%): ${passRate}%
+Per-quiz: ${perQuiz.map((p) => `${p.title} [topic: ${p.topic}] attempts=${p.attempts} avg=${p.avg}%`).join(" | ") || "none"}
+Top students (avg%): ${topPerformers.map((t) => `${t.name}=${t.avg}% over ${t.attempts} quizzes`).join(", ") || "none"}
+Lowest students (avg%): ${strugglers.map((t) => `${t.name}=${t.avg}%`).join(", ") || "none"}
+Topic accuracy (weakest first): ${topicStats.map((t) => `${t.topic}=${t.accuracy}%`).join(", ") || "none"}
+Hardest questions: ${weakQuestions.map((q) => `"${q.question}" (${q.accuracy}% correct, quiz: ${q.quiz})`).join(" | ") || "none"}`;
+
+    const ask = data.prompt?.trim()
+      ? `The trainer asks: """${data.prompt.trim()}""" — answer it directly and specifically using the data (name students and topics where relevant).`
+      : `No specific question was asked — give a complete performance overview of the batch.`;
+
+    let parsed: Partial<BatchInsightReport> = {};
+    try {
+      parsed = (await chatJSON({
+        system:
+          "You are a senior learning analytics consultant for an EdTech training company. Use ONLY the provided data; never invent names or numbers. Respond in strict JSON.",
+        user: `${ask}
+
+DATA:
+${factSheet}
+
+Respond with JSON exactly shaped as:
+{"headline":"one short title","answer":"3-6 sentence direct answer to the trainer's question, citing names/topics/percentages","keyFindings":["..."],"strengths":["..."],"weaknesses":["..."],"recommendations":["actionable step",...]}
+Each array should have 2-5 concise items.`,
+      })) as Partial<BatchInsightReport>;
+    } catch (e) {
+      throw new Error(e instanceof Error ? e.message : "AI unavailable");
+    }
+
+    const arr = (v: unknown) =>
+      Array.isArray(v) ? v.map((x) => String(x).slice(0, 400)).filter(Boolean).slice(0, 6) : [];
+
+    return {
+      headline: String(parsed.headline ?? "Batch performance insights").slice(0, 160),
+      answer: String(parsed.answer ?? "").slice(0, 2000),
+      keyFindings: arr(parsed.keyFindings),
+      strengths: arr(parsed.strengths),
+      weaknesses: arr(parsed.weaknesses),
+      recommendations: arr(parsed.recommendations),
+      topPerformers,
+      weakTopics,
+      weakQuestions: weakQuestions.slice(0, 6),
+      stats: { quizzes: quizList.length, attempts, students: ranked.length, avg, passRate },
+      generatedAt: new Date().toISOString(),
+      batchName: batch.name,
+    };
+  });
