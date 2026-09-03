@@ -308,6 +308,7 @@ export function FeedbackResponses({ quizId }: { quizId: string }) {
             </button>
           ))}
         </div>
+        </>
       )}
 
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
