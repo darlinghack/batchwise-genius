@@ -267,18 +267,55 @@ function BatchAnalytics() {
       </div>
 
       <Card className="p-5">
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> AI Insights</h2>
-          <Button size="sm" onClick={generateInsight} disabled={loadingInsight || !attempts} className="bg-gradient-primary hover:opacity-90">
-            {loadingInsight ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Generate
-          </Button>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> AI Insights</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Ask a specific question about performance, topics, or students.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {report && <Button size="sm" variant="outline" onClick={downloadInsight}><Download className="h-4 w-4" /> Download</Button>}
+            <Button size="sm" onClick={() => setPromptOpen(true)} disabled={loadingInsight || !attempts} className="bg-gradient-primary hover:opacity-90">
+              {loadingInsight ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Generate
+            </Button>
+          </div>
         </div>
-        {insight ? (
-          <p className="rounded-lg bg-accent/40 p-4 text-sm leading-relaxed">{insight}</p>
-        ) : (
-          <p className="text-sm text-muted-foreground">Generate an AI summary across this batch's quizzes.</p>
-        )}
+        {report ? (
+          <div className="space-y-5">
+            <div className="rounded-lg bg-accent/40 p-4">
+              <h3 className="font-semibold">{report.headline}</h3>
+              <p className="mt-2 text-sm leading-relaxed">{report.answer}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-4">
+              {[
+                ["Quizzes", report.stats.quizzes], ["Submissions", report.stats.attempts],
+                ["Students", report.stats.students], ["Average", `${report.stats.avg}%`],
+              ].map(([label, value]) => <div key={String(label)} className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-bold">{value}</p></div>)}
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              {[
+                ["Key findings", report.keyFindings], ["Strengths", report.strengths],
+                ["Areas to improve", report.weaknesses], ["Recommendations", report.recommendations],
+              ].map(([title, items]) => <div key={String(title)}><h3 className="mb-2 text-sm font-semibold">{title}</h3><ul className="space-y-1.5 text-sm text-muted-foreground">{(items as string[]).map((item) => <li key={item} className="flex gap-2"><span className="text-primary">•</span><span>{item}</span></li>)}</ul></div>)}
+            </div>
+            {report.topPerformers.length > 0 && <div><h3 className="mb-2 text-sm font-semibold">Top performers</h3><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{report.topPerformers.slice(0, 5).map((student, index) => <div key={`${student.name}-${index}`} className="rounded-lg border border-border p-3"><p className="truncate text-sm font-medium">{index + 1}. {student.name}</p><p className="mt-1 text-xs text-muted-foreground">{student.avg}% average · {student.attempts} quizzes</p></div>)}</div></div>}
+            {report.weakTopics.length > 0 && <div><h3 className="mb-2 text-sm font-semibold">Weakest topics</h3><div className="space-y-2">{report.weakTopics.map((topic) => <div key={topic.topic} className="flex items-center gap-3 text-sm"><span className="w-40 truncate">{topic.topic}</span><div className="h-2 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-warning" style={{ width: `${topic.accuracy}%` }} /></div><span className="w-12 text-right text-muted-foreground">{topic.accuracy}%</span></div>)}</div></div>}
+          </div>
+        ) : <p className="text-sm text-muted-foreground">Generate an AI report across this batch's quizzes.</p>}
       </Card>
+
+      <Dialog open={promptOpen} onOpenChange={setPromptOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ask about this batch</DialogTitle>
+            <DialogDescription>Ask a question or leave this blank for a complete performance report.</DialogDescription>
+          </DialogHeader>
+          <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Who scored top in all quizzes? Which topics are students weaker in?" rows={5} autoFocus />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPromptOpen(false)}>Cancel</Button>
+            <Button onClick={generateInsight} disabled={loadingInsight} className="bg-gradient-primary hover:opacity-90"><Sparkles className="h-4 w-4" /> Generate report</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
