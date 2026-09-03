@@ -25,12 +25,22 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getBatchInsight } from "@/lib/quiz.functions";
+import { getBatchInsightReport, type BatchInsightReport } from "@/lib/quiz.functions";
 import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { normalizeFeedbackForm } from "@/lib/feedback-form";
+
 
 
 export const Route = createFileRoute("/dashboard/batches/$batchId/analytics")({
