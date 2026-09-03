@@ -452,7 +452,8 @@ export const getBatchInsightReport = createServerFn({ method: "POST" })
 
     const topicAgg = new Map<string, { correct: number; total: number; questions: Set<string> }>();
     [...qStats.entries()].forEach(([id, v]) => {
-      const q = qMap.get(id)!;
+      const q = qMap.get(id);
+      if (!q) return;
       const topic = quizTopic.get(q.quiz_id) ?? "General";
       const cur = topicAgg.get(topic) ?? { correct: 0, total: 0, questions: new Set<string>() };
       cur.correct += v.correct;
