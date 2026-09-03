@@ -438,13 +438,15 @@ export const getBatchInsightReport = createServerFn({ method: "POST" })
 
     const weakQuestions = [...qStats.entries()]
       .map(([id, v]) => {
-        const q = qMap.get(id)!;
+        const q = qMap.get(id);
+        if (!q) return null;
         return {
           question: q.question_text.slice(0, 180),
           accuracy: Math.round((v.correct / Math.max(1, v.total)) * 100),
           quiz: quizTitle.get(q.quiz_id) ?? "",
         };
       })
+      .filter((q): q is { question: string; accuracy: number; quiz: string } => q !== null)
       .sort((a, b) => a.accuracy - b.accuracy)
       .slice(0, 10);
 
