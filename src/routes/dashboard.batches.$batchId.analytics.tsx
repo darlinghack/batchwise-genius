@@ -262,7 +262,7 @@ function BatchAnalytics() {
             <p className="mt-1 text-sm text-muted-foreground">Ask a specific question about performance, topics, or students.</p>
           </div>
           <div className="flex items-center gap-2">
-            {report && <Button size="sm" variant="outline" onClick={downloadInsight}><Download className="h-4 w-4" /> Download</Button>}
+            {report && <Button size="sm" variant="outline" onClick={downloadInsight}><Download className="h-4 w-4" /> Download PDF</Button>}
             <Button size="sm" onClick={() => setPromptOpen(true)} disabled={loadingInsight || !attempts} className="bg-gradient-primary hover:opacity-90">
               {loadingInsight ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Generate
             </Button>
