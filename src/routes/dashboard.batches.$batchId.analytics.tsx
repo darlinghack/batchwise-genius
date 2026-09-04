@@ -79,6 +79,7 @@ function BatchAnalytics() {
   const [report, setReport] = useState<BatchInsightReport | null>(null);
   const [promptOpen, setPromptOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [askedPrompt, setAskedPrompt] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
 
 
@@ -215,6 +216,7 @@ function BatchAnalytics() {
     try {
       const res = await reportFn({ data: { batchId, prompt } });
       setReport(res);
+      setAskedPrompt(prompt);
       setPrompt("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not generate insight");
@@ -223,27 +225,14 @@ function BatchAnalytics() {
     }
   }
 
-  function downloadInsight() {
+  async function downloadInsight() {
     if (!report) return;
-    const sections = [
-      `${report.headline}\nBatch: ${report.batchName}\nGenerated: ${new Date(report.generatedAt).toLocaleString()}`,
-      `Trainer question\n${prompt || "Complete batch performance overview"}`,
-      `Answer\n${report.answer}`,
-      `Key findings\n${report.keyFindings.map((x) => `• ${x}`).join("\n")}`,
-      `Strengths\n${report.strengths.map((x) => `• ${x}`).join("\n")}`,
-      `Areas to improve\n${report.weaknesses.map((x) => `• ${x}`).join("\n")}`,
-      `Recommendations\n${report.recommendations.map((x) => `• ${x}`).join("\n")}`,
-      `Top performers\n${report.topPerformers.map((x, i) => `${i + 1}. ${x.name} — ${x.avg}% average (${x.attempts} quizzes)`).join("\n")}`,
-      `Weakest topics\n${report.weakTopics.map((x) => `• ${x.topic} — ${x.accuracy}% accuracy (${x.questions} questions)`).join("\n")}`,
-      `Hardest questions\n${report.weakQuestions.map((x) => `• ${x.accuracy}% — ${x.question} (${x.quiz})`).join("\n")}`,
-    ];
-    const blob = new Blob([sections.join("\n\n")], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${report.batchName.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "batch"}-insights.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      const { buildInsightPdf, insightPdfFileName } = await import("@/lib/insight-pdf");
+      buildInsightPdf(report, askedPrompt).save(insightPdfFileName(report.batchName));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not create the PDF");
+    }
   }
 
   if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
@@ -273,7 +262,7 @@ function BatchAnalytics() {
             <p className="mt-1 text-sm text-muted-foreground">Ask a specific question about performance, topics, or students.</p>
           </div>
           <div className="flex items-center gap-2">
-            {report && <Button size="sm" variant="outline" onClick={downloadInsight}><Download className="h-4 w-4" /> Download</Button>}
+            {report && <Button size="sm" variant="outline" onClick={downloadInsight}><Download className="h-4 w-4" /> Download PDF</Button>}
             <Button size="sm" onClick={() => setPromptOpen(true)} disabled={loadingInsight || !attempts} className="bg-gradient-primary hover:opacity-90">
               {loadingInsight ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Generate
             </Button>
