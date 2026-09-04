@@ -79,6 +79,7 @@ function BatchAnalytics() {
   const [report, setReport] = useState<BatchInsightReport | null>(null);
   const [promptOpen, setPromptOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [askedPrompt, setAskedPrompt] = useState("");
   const [loadingInsight, setLoadingInsight] = useState(false);
 
 
