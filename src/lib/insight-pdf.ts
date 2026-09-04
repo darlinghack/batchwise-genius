@@ -20,6 +20,13 @@ const PAGE_W = 595.28; // A4 pt
 const PAGE_H = 841.89;
 const CONTENT_W = PAGE_W - M * 2;
 
+function ellipsize(doc: jsPDF, text: string, maxWidth: number): string {
+  if (doc.getTextWidth(text) <= maxWidth) return text;
+  let out = text;
+  while (out.length > 1 && doc.getTextWidth(`${out}...`) > maxWidth) out = out.slice(0, -1);
+  return `${out.trimEnd()}...`;
+}
+
 export function buildInsightPdf(report: BatchInsightReport, askedPrompt: string): jsPDF {
   void PRIMARY;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -137,12 +144,12 @@ export function buildInsightPdf(report: BatchInsightReport, askedPrompt: string)
       doc.setDrawColor(C.border[0], C.border[1], C.border[2]);
       doc.roundedRect(x, y, pw, 44, 7, 7, "D");
       setFont(10, "bold", C.text);
-      doc.text(doc.splitTextToSize(`${i + 1}. ${s.name}`, pw - 18)[0], x + 9, y + 18);
+      doc.text(ellipsize(doc, `${i + 1}. ${s.name}`, pw - 18), x + 9, y + 18);
       setFont(8.5, "normal", C.muted);
       doc.text(`${s.avg}% average  ·  ${s.attempts} quizzes`, x + 9, y + 33);
       if (col === perRow - 1 || i === report.topPerformers.length - 1) y += 44 + gap;
     });
-    y += 8;
+    y += 14;
   }
 
   // ---- Weakest topics with bars ----
@@ -154,7 +161,7 @@ export function buildInsightPdf(report: BatchInsightReport, askedPrompt: string)
     report.weakTopics.forEach((t) => {
       ensure(22);
       setFont(9.5, "normal", C.text);
-      doc.text(doc.splitTextToSize(t.topic, 150)[0], M, y + 8);
+      doc.text(ellipsize(doc, t.topic, 150), M, y + 8);
       const barX = M + 160;
       const barW = CONTENT_W - 160 - 44;
       doc.setFillColor(C.track[0], C.track[1], C.track[2]);
@@ -184,8 +191,8 @@ export function buildInsightPdf(report: BatchInsightReport, askedPrompt: string)
       doc.text(lines, M + 42, y, { lineHeightFactor: 1.3 });
       y += lines.length * 13;
       setFont(8.5, "normal", C.muted);
-      doc.text(q.quiz, M + 42, y + 4);
-      y += 18;
+      doc.text(q.quiz, M + 42, y + 6);
+      y += 26;
     });
   }
 
