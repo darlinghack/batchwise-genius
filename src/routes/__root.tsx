@@ -136,7 +136,10 @@ function RootComponent() {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
+      // Only react to real identity changes. Reacting to hourly token
+      // refreshes (which fail when the network drops) causes refetch storms.
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
     });
     return () => subscription.unsubscribe();
