@@ -18,7 +18,7 @@ const GenerateInput = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]),
   count: z.number().int().min(1).max(30),
   topics: z.array(z.string().min(1).max(200)).max(20).optional(),
-  instructions: z.string().max(2000).optional(),
+  instructions: z.string().max(60000).optional(),
 });
 
 export const generateQuizQuestions = createServerFn({ method: "POST" })
