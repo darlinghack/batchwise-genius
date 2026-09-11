@@ -445,7 +445,7 @@ function BatchDetail() {
               </div>
               <div className="space-y-2">
                 <Label>Questions</Label>
-                <Input type="number" min={1} max={30} value={count} onChange={(e) => setCount(Math.min(30, Math.max(1, Number(e.target.value) || 1)))} />
+                <Input type="number" min={1} value={count} onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))} />
               </div>
             </div>
             <div className="space-y-2">
