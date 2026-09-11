@@ -299,9 +299,8 @@ function AssessmentsPage() {
                 <Input
                   type="number"
                   min={1}
-                  max={30}
                   value={count}
-                  onChange={(e) => setCount(Math.max(1, Math.min(30, Number(e.target.value) || 1)))}
+                  onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))}
                 />
               </div>
               <div className="space-y-2">

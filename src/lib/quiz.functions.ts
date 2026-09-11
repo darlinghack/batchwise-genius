@@ -16,7 +16,7 @@ export interface GeneratedQuestion {
 const GenerateInput = z.object({
   topicName: z.string().min(1).max(200),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  count: z.number().int().min(1).max(30),
+  count: z.number().int().min(1).max(500),
   topics: z.array(z.string().min(1).max(200)).max(20).optional(),
   instructions: z.string().max(60000).optional(),
 });
@@ -122,7 +122,7 @@ const SubmitInput = z.object({
   rollNumber: z.string().trim().max(60).optional().default(""),
   collegeName: z.string().trim().max(160).optional().default(""),
 
-  answers: z.array(z.object({ questionId: z.string().uuid(), selected: z.number().int().min(-1).max(3) })).max(50),
+  answers: z.array(z.object({ questionId: z.string().uuid(), selected: z.number().int().min(-1).max(3) })).max(500),
   timeTakenSeconds: z.number().int().min(0).max(100000),
   feedbackRating: z.number().int().min(1).max(5).optional(),
   feedbackText: z.string().trim().max(1000).optional().default(""),
